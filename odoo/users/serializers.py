@@ -14,6 +14,17 @@ class ClientUserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClientUserModel
         fields = ["user_id", "auth_user", "phone", "address"]
+        
+
+class ClientUserUpdateSerializer(serializers.ModelSerializer):
+    auth_user = UserDetailSerializer()
+    
+    class Meta:
+        model = ClientUserModel
+        fields = ["user_id", "auth_user", "phone", "address"]
+        
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
 
 class AdminGetUsersSerializer(serializers.ModelSerializer):
     auth_user = UserDetailSerializer()
