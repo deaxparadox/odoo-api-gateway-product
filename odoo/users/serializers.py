@@ -15,6 +15,12 @@ class ClientUserDetailSerializer(serializers.ModelSerializer):
         model = ClientUserModel
         fields = ["user_id", "auth_user", "phone", "address"]
 
+class AdminGetUsersSerializer(serializers.ModelSerializer):
+    auth_user = UserDetailSerializer()
+    class Meta:
+        model = ClientUserModel
+        fields = "__all__"
+
 class UserSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
