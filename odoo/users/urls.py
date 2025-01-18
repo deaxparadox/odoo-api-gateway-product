@@ -4,22 +4,31 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenBlacklistView
 )
-from users import views
+from users.views import user_view
 
 app_name = "users"
 
 urlpatterns = [
     # Authentication endpoints
-    path('auth/login/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/login/', user_view.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # path('auth/logout/', TokenBlacklistView.as_view(), name='token_blacklist'),
-    path('auth/logout/', views.LogoutView.as_view(), name='token_blacklist'),
+    path('auth/logout/', user_view.LogoutView.as_view(), name='token_blacklist'),
     
     
-    # User endpoints
-    path("users/", views.UserCreateView.as_view(), name="auth_create_user"),
-    path("users/<str:user_id>/", views.UserSpecificDetailView.as_view(), name="get_user_detail"),
+    # POST: Create users
+    # GET: Admin -> get list of all users
+    path("users/", user_view.UserCreateView.as_view(), name="auth_create_user"),
+    
+    # GET: Get user details
+    # PUT: Update user details
+    # DELETE: Delete users
+    path("users/<str:user_id>/", user_view.UserSpecificDetailView.as_view(), name="get_user_detail"),
     # path("users/<str:id>/", views.DeleteUserView.as_view(), name="delete_user")
+    
+    
+    
     # Vendor endpoints
     
 ]

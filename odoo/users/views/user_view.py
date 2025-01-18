@@ -38,7 +38,8 @@ class UserCreateView(APIView):
         """
         Admin User return the list of all users.
         """
-        http_authorization = request.META.get("HTTP_AUTHORIZATION")
+        # http_authorization = request.META.get("HTTP_AUTHORIZATION")
+        http_authorization = request.auth
         if not http_authorization:
             return Response({"error": "User not authentication"}, status=status.HTTP_401_UNAUTHORIZED)
         token = http_authorization.split(" ")[1]
@@ -55,6 +56,9 @@ class UserCreateView(APIView):
             
             
     def post(self, request, format=None):
+        """
+        Create a user.
+        """
         seriailzer = UserSerializer(data=request.data)
         # If for some reason unable to create a user
         # return it
@@ -105,11 +109,18 @@ class UserCreateView(APIView):
                 "message": "User create successfully"
             }, status=status.HTTP_201_CREATED)
         # Invalid details
-        return Response(seriailzer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(seriailzer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    User login.
+    """
     serializer_class = CustomTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        # print(request.user)
+        return super().post(request, *args, **kwargs)
 
 
 # Get user specific details
@@ -119,45 +130,75 @@ class UserSpecificDetailView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request, user_id: str):
+        """
+        Get user details.
+        """
         client_user = ClientUserModel.objects.get(user_id=user_id)
         client_serializer = ClientUserDetailSerializer(client_user)
         print(client_serializer.data)
         return Response(client_serializer.data, status=status.HTTP_200_OK)
     
     def put(self, request, user_id: str):
+        """
+        Update user details.
+        """
         http_authorization = request.auth
         client_user_instance = ClientUserModel.objects.get(user_id=user_id)
         client_update_serializer = ClientUserUpdateSerializer(data=request.data, instance=client_user_instance, partial=True)
-        if client_update_serializer.is_valid():
+        
+        
+        try:
             access_token = AccessToken(str(http_authorization))
-            if user_id != access_token['user_id']: return Response({"error": "Invalid users details"}, status=status.HTTP_401_UNAUTHORIZED)
-            print(client_update_serializer.data)
-            return Response(client_update_serializer.data, status=status.HTTP_202_ACCEPTED)
+            # print(client_user_instance.auth_user.id, access_token['user_id'])
+            if client_user_instance.auth_user.id != access_token['user_id']: 
+                return Response({"error": "Invalid users details"}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        
+        
+        if client_update_serializer.is_valid():
+            print(client_update_serializer.validated_data)
+            # client_update_serializer.update()
+            client_update_serializer.save()
+            return Response(client_update_serializer.validated_data, status=status.HTTP_202_ACCEPTED)
         return Response(client_update_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     
     def delete(self, request, user_id: str):
+        """
+        Delete user accounts.
+        """
         # print(request.auth)
         http_authorization = request.auth
         # print(http_authorization, type(http_authorization))
+        client_user_instance = ClientUserModel.objects.get(user_id=user_id)
+        try:
+            access_token = AccessToken(str(http_authorization))
+            # print(client_user_instance.auth_user.id, access_token['user_id'])
+            if client_user_instance.auth_user.id != access_token['user_id']: 
+                return Response({"error": "Invalid users details"}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+            
         
         refresh_serializer = LogoutSerializer(data=request.data)
         if refresh_serializer.is_valid():
             # disable the user
             try:
-                access_token = AccessToken(str(http_authorization))
-                if user_id != access_token['user_id']: return Response({"error": "Invalid users details"}, status=status.HTTP_401_UNAUTHORIZED)
                 user = User.objects.get(id=access_token['user_id'])
                 user.is_active = False
                 user.save()
             except Exception as e:
                 return Response({"error": "Access token " + str(e)}, status=status.HTTP_401_UNAUTHORIZED)
-            # Invalid the refresh token
+            # Invalid the refresh token,
+            # user must be disabled for refresh token to be blacklisted
             try:
                 refresh_token = RefreshToken(refresh_serializer.validated_data.get("refresh"))
                 refresh_token.blacklist()
             except Exception as e:
-                return Response({"error": "Refresh token" + str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({"error": "Refresh token " + str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+            
             return Response({"message": "User successfully deleted"}, status=status.HTTP_202_ACCEPTED)
         else:
             return Response({"error": "Refresh token required"}, status=status.HTTP_400_BAD_REQUEST)    
