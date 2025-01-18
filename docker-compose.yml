@@ -1,5 +1,6 @@
 services:
   odoo-backend:
-    build: ./
+    build: ./odoo
     container_name: odoo-backend-api-services
-    
+    ports:
+      - 8000:8000

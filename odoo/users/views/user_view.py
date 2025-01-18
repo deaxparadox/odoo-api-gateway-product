@@ -1,9 +1,11 @@
+import logging
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework_simplejwt.models import TokenUser
 from rest_framework_simplejwt.views import TokenViewBase, TokenObtainPairView
@@ -23,6 +25,16 @@ from users.models import ClientUserModel
 import helpers
 
 
+logger = logging.getLogger(__name__)
+
+
+class AdminView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def get(self, request):
+        all_active_user = [u for u in ClientUserModel.objects.all() if u.auth_user.is_active == True]
+        serializer = AdminGetUsersSerializer(all_active_user, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # Create a new user. 
 class UserCreateView(APIView):
@@ -34,7 +46,7 @@ class UserCreateView(APIView):
     """
     # permission_classes = [IsAuthenticated]
     
-    def get(self, request):
+    def get(self, request: Request):
         """
         Admin User return the list of all users.
         """
@@ -42,8 +54,8 @@ class UserCreateView(APIView):
         http_authorization = request.auth
         if not http_authorization:
             return Response({"error": "User not authentication"}, status=status.HTTP_401_UNAUTHORIZED)
-        token = http_authorization.split(" ")[1]
-        access_token = AccessToken(token=token)
+        # token = http_authorization.split(" ")[1]
+        access_token = AccessToken(token=http_authorization)
         user = User.objects.get(id=access_token['user_id'])
         if user.is_superuser:
             users = [u for u in ClientUserModel.objects.all() if not u.auth_user.is_superuser]
@@ -56,6 +68,7 @@ class UserCreateView(APIView):
             
             
     def post(self, request, format=None):
+        logger.warning("Creating a new user.")
         """
         Create a user.
         """
@@ -65,7 +78,8 @@ class UserCreateView(APIView):
         current_user = None
         if seriailzer.is_valid():
             # Create a user.
-            # User must return a request with `email`.
+            
+            # User must request with `email`.
             
             # Search for username and email
             if (
@@ -133,6 +147,7 @@ class UserSpecificDetailView(APIView):
         """
         Get user details.
         """
+        
         client_user = ClientUserModel.objects.get(user_id=user_id)
         client_serializer = ClientUserDetailSerializer(client_user)
         print(client_serializer.data)

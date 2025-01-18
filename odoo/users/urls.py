@@ -17,8 +17,8 @@ urlpatterns = [
     path('auth/logout/', user_view.LogoutView.as_view(), name='token_blacklist'),
     
     
+    
     # POST: Create users
-    # GET: Admin -> get list of all users
     path("users/", user_view.UserCreateView.as_view(), name="auth_create_user"),
     
     # GET: Get user details

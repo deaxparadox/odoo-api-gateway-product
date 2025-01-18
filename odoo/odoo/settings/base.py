@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     'rest_framework_simplejwt.token_blacklist',
 ] + [
-    # "product.apps.ProductConfig",
+    "product.apps.ProductConfig",
     "users.apps.UsersConfig",
     "notifications.apps.NotificationsConfig",
 ]
@@ -142,4 +142,13 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     # "EXCEPTION_HANDLER" : "users.handlers.custom_exception_handler"
+    # 'DEFAULT_THROTTLE_CLASSES': [
+    #     'rest_framework.throttling.AnonRateThrottle',
+    #     'rest_framework.throttling.UserRateThrottle'
+    # ],
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'anon': '100/day',
+    #     'user': '1000/day'
+    # }
 }
+
