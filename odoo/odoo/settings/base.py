@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     # "rest_framework.authtoken",
     "rest_framework_simplejwt",
     'rest_framework_simplejwt.token_blacklist',
+    'django_celery_results',
+    'django_celery_beat',
 ] + [
     "product.apps.ProductConfig",
     "users.apps.UsersConfig",
@@ -159,3 +161,15 @@ CACHES = {
         "LOCATION": "redis://127.0.0.1:6379",
     }
 }
+
+
+
+# 
+# `CELERY CONFIGURATION
+# 
+CELERY_RESULT_BACKEND = 'django-db'
+# celery setting.
+CELERY_CACHE_BACKEND = 'default'  # Default point to Django cache settings
+BROKER_URL = "redis://localhost:6379/0"
+# broker_connection_retry_on_startup
+BROKER_CONNECTION_RETRY_ON_START = True
