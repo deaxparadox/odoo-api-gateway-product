@@ -4,3 +4,8 @@ services:
     container_name: odoo-backend-api-services
     ports:
       - 8000:8000
+    volumes:
+      - ./odoo:/app/odoo/
+
+volumes:
+  odoo-server:
