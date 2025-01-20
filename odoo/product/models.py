@@ -7,10 +7,13 @@ from helpers.models import TimeIt
 class ProductCategoryModel(TimeIt):
     name = models.CharField(max_length=120, verbose_name=_("Name of the category"))
     vendor_id = models.CharField(max_length=120, verbose_name=_("The product owner"))
-    # parent_id = models.ManyToManyField(
-    #     ParentProduct,
-    #     verbose_name=_("ID of the parent Category"),
-    # )
+    parent_id = models.OneToOneField(
+        "self",
+        verbose_name=_("ID of the parent Category"),
+        on_delete=models.SET_NULL,
+        null=True,
+        default=None
+    )
     child_ids = models.ManyToManyField(
         "self",
         verbose_name=_("List of child categories")

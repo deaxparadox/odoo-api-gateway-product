@@ -11,8 +11,13 @@ class ProductCategoriesView(APIView):
     def get(self, request):
         """
         Get all product categories
-        """    
+        """
+        product_scope = request.GET.get("active", None)
         product_qs = models.ProductCategoryModel.objects.all()
+        if product_scope == 'true':
+            product_qs = product_qs.filter(active=True)
+        elif product_scope == 'false':
+            product_qs = product_qs.filter(active=False)
         product_qs_serializer = product_serializer.ProductCategorySerializer(product_qs, many=True)
         return Response(product_qs_serializer.data, status=status.HTTP_200_OK)
     
@@ -38,9 +43,24 @@ class ProductView(APIView):
         """
         Get details of a specific category
         """
-        product_qs = models.ProductCategoryModel.objects.get(id=id)
-        product_qs_serializer = product_serializer.ProductCategorySerializer(product_qs)
-        return Response(product_qs_serializer.data, status=status.HTTP_200_OK)
+        try:
+            product_qs = models.ProductCategoryModel.objects.get(id=id)
+            if not product_qs.active:
+                return Response({"Message": [
+                    "Product doesnot exist"
+                ]}, status=status.HTTP_400_BAD_REQUEST)    
+            product_qs_serializer = product_serializer.ProductCategorySerializer(product_qs)
+            return Response(product_qs_serializer.data, status=status.HTTP_200_OK)
+        # Not product exist exception
+        except models.ProductCategoryModel.DoesNotExist as e:
+            return Response({"Message": [
+                str(e)
+            ]}, status=status.HTTP_400_BAD_REQUEST)    
+        # Any other exception
+        except Exception as e:
+            return Response({"Message": [
+                str(e)
+            ]}, status=status.HTTP_400_BAD_REQUEST)    
     
     def put(self, request, id: int):
         """
@@ -50,8 +70,10 @@ class ProductView(APIView):
         
         try:
             if update_serializer.is_valid():
-                
                 product_qs = models.ProductCategoryModel.objects.get(id=id)
+                # Check product existence.
+                if not product_qs.active:
+                    return Response({"Message": ["Product doesnot exists"]}, status=status.HTTP_400_BAD_REQUEST)
                 product_instance = update_serializer.update(product_qs, update_serializer.validated_data)
                 return Response(
                     update_serializer.data, 
@@ -62,23 +84,45 @@ class ProductView(APIView):
                     update_serializer.errors, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        # Doesnotexist exception
+        except models.ProductCategoryModel.DoesNotExist as e:
+            return Response({"Message": [
+                str(e)
+            ]}, status=status.HTTP_400_BAD_REQUEST)
+        # Any other exception
         except Exception as e:
             return Response(
                 {"Error": str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-    def delete(self, request):
+    def delete(self, request, id: int):
         """
         Delete a category
         """
-        return Response({"Message": "Delete a category"}, status=status.HTTP_204_NO_CONTENT)
+        try:
+            product = models.ProductCategoryModel.objects.get(id=id)
+            if product.active:
+                product.active = False
+                product.save()
+                return Response({"Message": "Delete a category"}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({"Message": "Product already deleted"}, status=status.HTTP_400_BAD_REQUEST)
+        # Doesnotexist exception
+        except models.ProductCategoryModel.DoesNotExist as e:
+            return Response({"Message": [
+                str(e)
+            ]}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"Error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-class ProductUnderCategoryVeiw(APIView):
+
+class ProductsUnderCategoryVeiw(APIView):
     permission_classes = [IsAuthenticated]
     
-    def get(self, request):
+    def get(self, request, id: int) -> Response:
         """
         Get all products under a category
         """
+        # product_qs = models.ProductCategoryModel.objects.create()
         return Response({"Message": "Get all products under a category"}, status=status.HTTP_200_OK)
