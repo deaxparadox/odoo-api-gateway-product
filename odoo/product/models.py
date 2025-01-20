@@ -18,7 +18,7 @@ class ProductCategoryModel(TimeIt):
         "self",
         verbose_name=_("List of child categories")
     )
-    description = models.TextField(verbose_name=_("Description of the category"))
+    description = models.TextField(verbose_name=_("Description of the category"), null=True)
     active = models.BooleanField(default=True, verbose_name=_("Delete the category"))
 
     # def __repr__(self)
@@ -29,13 +29,13 @@ class ProductCategoryModel(TimeIt):
 class ParentProductModel(TimeIt):
     name = models.CharField(max_length=120, verbose_name="Project name")
     category_ids = models.ManyToManyField(
-        ProductCategoryModel, 
+        ProductCategoryModel,
         verbose_name="Category IDs of the products belongs to",
         related_name="parent_product"
     )
     list_price = models.FloatField(default=0.0, verbose_name="Default price of the project")
-    description = models.TextField(verbose_name="Long description")
-    image_url = models.URLField(verbose_name="URL of the project's image", blank=True, null=True)
+    description = models.TextField(verbose_name=_("Long description"), null=True)
+    image_url = models.URLField(verbose_name="URL of the project's image", null=True)
     # tags = mode
 
     def __str__(self) -> str:
