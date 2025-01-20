@@ -16,6 +16,7 @@ class ProductCategoryModel(TimeIt):
         verbose_name=_("List of child categories")
     )
     description = models.TextField(verbose_name=_("Description of the category"))
+    active = models.BooleanField(default=True, verbose_name=_("Delete the category"))
 
     # def __repr__(self)
     def __str__(self) -> str:

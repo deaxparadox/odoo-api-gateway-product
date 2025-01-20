@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework_simplejwt.models import TokenUser
 from rest_framework_simplejwt.views import TokenViewBase, TokenObtainPairView
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from users.serializers import (
@@ -55,16 +56,22 @@ class UserCreateView(APIView):
         if not http_authorization:
             return Response({"error": "User not authentication"}, status=status.HTTP_401_UNAUTHORIZED)
         # token = http_authorization.split(" ")[1]
-        access_token = AccessToken(token=http_authorization)
-        user = User.objects.get(id=access_token['user_id'])
-        if user.is_superuser:
-            users = [u for u in ClientUserModel.objects.all() if not u.auth_user.is_superuser]
-            users_serializers = AdminGetUsersSerializer(users, many=True)
-            return Response(users_serializers.data, status=status.HTTP_200_OK)
-        return Response(
-            {"message": "Only admins allowed"},
-            status=status.HTTP_401_UNAUTHORIZED
-        )
+        try:
+            # print(http_authorization)
+            access_token = AccessToken(token=str(http_authorization))
+            user = User.objects.get(id=access_token['user_id'])
+            if user.is_superuser:
+                users = [u for u in ClientUserModel.objects.all() if not u.auth_user.is_superuser]
+                users_serializers = AdminGetUsersSerializer(users, many=True)
+                return Response(users_serializers.data, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Only admins allowed"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except TokenError as e:
+            return Response({"Error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response({"Error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
             
     def post(self, request, format=None):
