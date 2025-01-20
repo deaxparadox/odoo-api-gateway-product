@@ -3,41 +3,39 @@ from django.utils.translation import gettext_lazy as _
 from helpers.models import TimeIt
 
 
-# Product Template Model
-class ParentProduct(TimeIt):
-    # id = models.CharField(
-    #     max_length=10, 
-    #     verbose_name="Unique identifier of the category",
-    #     primary_key=True
+# Product Category model
+class ProductCategoryModel(TimeIt):
+    name = models.CharField(max_length=120, verbose_name=_("Name of the category"))
+    vendor_id = models.CharField(max_length=120, verbose_name=_("The product owner"))
+    # parent_id = models.ManyToManyField(
+    #     ParentProduct,
+    #     verbose_name=_("ID of the parent Category"),
     # )
+    child_ids = models.ManyToManyField(
+        "self",
+        verbose_name=_("List of child categories")
+    )
+    description = models.TextField(verbose_name=_("Description of the category"))
+
+    # def __repr__(self)
+    def __str__(self) -> str:
+        return "%s" % (self.name)
+
+# Product Template Model
+class ParentProductModel(TimeIt):
     name = models.CharField(max_length=120, verbose_name="Project name")
-    category_ids = models.CharField(max_length=10, verbose_name="Category IDs of the products belongs to")
+    category_ids = models.ManyToManyField(
+        ProductCategoryModel, 
+        verbose_name="Category IDs of the products belongs to",
+        related_name="parent_product"
+    )
     list_price = models.FloatField(default=0.0, verbose_name="Default price of the project")
     description = models.TextField(verbose_name="Long description")
     image_url = models.URLField(verbose_name="URL of the project's image", blank=True, null=True)
     # tags = mode
 
-class ProductCategoryModel(TimeIt):
-    # id = models.CharField(
-    #     max_length=10, 
-    #     verbose_name="Unique identifier of the category",
-    #     primary_key=True
-    # )
-    name = models.CharField(max_length=120, verbose_name="Name of the category")
-    vendor_id = models.CharField(max_length=120, verbose_name="The product owner")
-    parent_id = models.ForeignKey(
-        ParentProduct,
-        on_delete=models.SET_NULL, 
-        verbose_name="ID of the parent Category",
-        null=True
-    )
-    child_ids = models.ManyToManyField(
-        "self",
-        verbose_name=_("List of child categories")
-    )
-    description = models.TextField(verbose_name="Description of the category")
-
-
+    def __str__(self) -> str:
+        return "%s" % self.name
 
 class AttributesCustom(models.TextChoices):
     NULL = "NUL", _("Null")
@@ -46,12 +44,7 @@ class AttributesCustom(models.TextChoices):
     
 
 
-class AttributeValues(TimeIt):
-    # id = models.CharField(
-    #     max_length=120,
-    #     verbose_name="Unique identifier of the attribute value",
-    #     primary_key=True
-    # )
+class AttributeValuesModel(TimeIt):
     name = models.CharField(max_length=120, verbose_name="Name of the attribute value")
     attribute_id = models.CharField(max_length=10, verbose_name="ID of the parent attribute")
     # sequence = 
@@ -64,14 +57,14 @@ class AttributeValues(TimeIt):
 
   
 
-class ProductVariants(TimeIt):
+class ProductVariantsModel(TimeIt):
     product_template_id = models.ManyToManyField(
-        ParentProduct, 
+        ParentProductModel, 
         verbose_name=_("ID of the parent product template"), 
         related_name="product_variants"
     )
     attribute_values = models.ManyToManyField(
-        AttributeValues, 
+        AttributeValuesModel, 
         verbose_name=_("Attributes assigned to the variant"), 
         related_name="product_variants"
     )  
@@ -88,12 +81,7 @@ class ProductVariants(TimeIt):
 
 
 
-class Atributes(TimeIt):
-    # id = models.CharField(
-    #     max_length=10, 
-    #     verbose_name="Unique identifier of the attribute",
-    #     primary_key=True
-    # )
+class AttributesModel(TimeIt):
     name = models.CharField(max_length=120, verbose_name="Name of the attribute")
     type = models.CharField(max_length=15, verbose_name="Type of the attribute")
     is_custom = models.TextField(
@@ -102,7 +90,7 @@ class Atributes(TimeIt):
         default=AttributesCustom.NULL
     )
     value_ids = models.ManyToManyField(
-        AttributeValues,
+        AttributeValuesModel,
         verbose_name=_("List of possible values for the attribute"),
         related_name="attributes"
     )

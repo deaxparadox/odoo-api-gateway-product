@@ -32,7 +32,7 @@ class Command(BaseCommand):
             for u in User.objects.filter(is_superuser=True):
                 if not hasattr(u, "client_user"):
                     self.stdout.write("\tCreating client_user_model instance for superuser %s\n" % u.username)
-                    if u.email:
+                    if len(u.email) == 0:
                         self.stdout.write("\t\tUnable to create client_user_model instance for superuser %s -> Email not found\n" % u.username)
                         continue
                     client_user = ClientUserModel.objects.create(user_id=helpers.create_variable_hash(u.email), auth_user=u)
