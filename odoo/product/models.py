@@ -34,9 +34,10 @@ class ParentProductModel(TimeIt):
         related_name="parent_product"
     )
     list_price = models.FloatField(default=0.0, verbose_name="Default price of the project")
-    description = models.TextField(verbose_name=_("Long description"), null=True)
+    description = models.TextField(verbose_name=_("Long description"), null=True, blank=True)
     image_url = models.URLField(verbose_name="URL of the project's image", null=True)
     # tags = mode
+    active = models.BooleanField(default=True, verbose_name=_("Delete a product"))
 
     def __str__(self) -> str:
         return "%s" % self.name
