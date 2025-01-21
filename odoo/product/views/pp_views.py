@@ -25,6 +25,7 @@ class ParentProductView(APIView):
         Create a new product.
         """
         try:
+            # print(request.data)
             pps = pp_serializers.PPCreateSerializer(data=request.data)
             if pps.is_valid():
                 instance = pps.save()

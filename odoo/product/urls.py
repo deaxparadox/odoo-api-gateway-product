@@ -1,6 +1,6 @@
 from django.urls import path
 from product.views import product_views
-from product.views import pp_views, pv_views
+from product.views import pp_views, pv_views, attr_views
 
 app_name = "product"
 
@@ -10,11 +10,11 @@ urlpatterns = [
     # 
     # GET: Get all product categories
     # POST: Create a new product
-    path("categories/", product_views.ProductCategoriesView.as_view(), name="get_product_categories"),
+    path("categories/", product_views.ProductCategoriesView.as_view(), name="product_categories_view"),
     # GET: Get detail of specific category (using id)
     # PUT: Update category details
     # DELETE: Delete a category
-    path("categories/<int:id>/", product_views.ProductView.as_view(), name="get_product_categories"),
+    path("categories/<int:id>/", product_views.ProductView.as_view(), name="product_categories_detail_view"),
     
     
     # Parent product Category
@@ -26,7 +26,7 @@ urlpatterns = [
     # GET: Get details of a specific product
     # PUT: Update product details
     # DELETE: Delete a product   
-    path("products/<int:id>/", pp_views.ParentProductDetailView.as_view(), name="parent_product_detail"),
+    path("products/<int:id>/", pp_views.ParentProductDetailView.as_view(), name="parent_product_detail_view"),
     
     
     # Parent variant Category
@@ -38,5 +38,17 @@ urlpatterns = [
     # GET: Get details of a specific variant
     # PUT: Update variant details
     # DELETE: Delete a variant   
-    path("variants/<int:id>/", pv_views.ProductVariantDetailView.as_view(), name="product_variant_detail")
+    path("variants/<int:id>/", pv_views.ProductVariantDetailView.as_view(), name="product_variant_detail_view"),
+    
+    
+    # Attributes Category
+    # 
+    # GET: all products variant
+    # POST: Create a new variant
+    path("attributes/", attr_views.AttributesView.as_view(), name="attributes_view"),
+    # 
+    # GET: Get details of a specific variant
+    # PUT: Update variant details
+    # DELETE: Delete a variant   
+    path("attributes/<int:id>/", attr_views.AttributesDetailView.as_view(), name="attributes_detail_view")
 ]

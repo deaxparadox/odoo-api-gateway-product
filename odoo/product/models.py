@@ -82,7 +82,7 @@ class ProductVariantsModel(TimeIt):
         related_name="product_variants"
     )
     attribute_values = models.ManyToManyField(
-        AttributesModel, 
+        AttributeValuesModel, 
         verbose_name=_("Attributes assigned to the variant"), 
         related_name="product_variants"
     )  

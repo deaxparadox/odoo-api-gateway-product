@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from product.models import ProductVariantsModel, ParentProductModel, AttributesModel
+from product.models import ProductVariantsModel, ParentProductModel, AttributeValuesModel
 
 class PVSerializers(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
@@ -14,7 +14,7 @@ class PVSerializersDetail(serializers.ModelSerializer):
     
     id = serializers.IntegerField(required=False)
     product_template_id = serializers.PrimaryKeyRelatedField(many=True, queryset=ParentProductModel.objects.all())
-    attribute_values = serializers.PrimaryKeyRelatedField(many=True, queryset=AttributesModel.objects.all())
+    attribute_values = serializers.PrimaryKeyRelatedField(many=True, queryset=AttributeValuesModel.objects.all())
     class Meta:
         model = ProductVariantsModel
         fields = ["id", 'product_template_id', 'attribute_values', 'sku', 'barcode', 'price_extra']
