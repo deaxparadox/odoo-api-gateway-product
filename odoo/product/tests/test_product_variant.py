@@ -41,7 +41,6 @@ class TestProductVariant(TestCase):
         )
         instance.attribute_values.create(
             name="Color",
-            type=""
         )
         pre_id = instance.id
         cur = models.ProductVariantsModel.objects.get(id=pre_id)
@@ -60,7 +59,6 @@ class TestProductVariant(TestCase):
         )
         instance.attribute_values.create(
             name="Color",
-            type=""
         )
         pre_id = instance.id
         cur = models.ProductVariantsModel.objects.get(id=pre_id)
@@ -81,7 +79,6 @@ class TestProductVariant(TestCase):
         )
         instance.attribute_values.create(
             name="Color",
-            type="",
             is_custom=models.AttributesCustom.CUSTOM
         )
         pre_id = instance.id
@@ -104,7 +101,6 @@ class TestProductVariant(TestCase):
         )
         instance.attribute_values.create(
             name="Color",
-            type="",
             is_custom=models.AttributesCustom.PREDEFINED
         )
         pre_id = instance.id

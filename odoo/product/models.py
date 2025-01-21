@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from helpers.models import TimeIt
+from taggit.managers import TaggableManager
 
 
 # Product Category model
@@ -36,18 +37,21 @@ class ParentProductModel(TimeIt):
     list_price = models.FloatField(default=0.0, verbose_name="Default price of the project")
     description = models.TextField(verbose_name=_("Long description"), null=True, blank=True)
     image_url = models.URLField(verbose_name="URL of the project's image", null=True)
-    # tags = mode
+    tags = TaggableManager()
     active = models.BooleanField(default=True, verbose_name=_("Delete a product"))
 
     def __str__(self) -> str:
         return "%s" % self.name
 
 class AttributesCustom(models.TextChoices):
-    NULL = "NUL", _("Null")
     CUSTOM = "CUS", _("Custom")
     PREDEFINED = "PRE", _("Predefined")
     
-
+class AttributesIntegerChoices(models.IntegerChoices):
+    PREDEFINED = 0
+    CUSTOM = 1
+    
+    
 
 class AttributeValuesModel(TimeIt):
     name = models.CharField(max_length=120, verbose_name="Name of the attribute value")
@@ -62,7 +66,7 @@ class AttributeValuesModel(TimeIt):
     is_custom = models.TextField(
         max_length=3,
         choices=AttributesCustom,
-        default=AttributesCustom.NULL
+        default=AttributesCustom.PREDEFINED
     )
     
 
@@ -73,7 +77,7 @@ class AttributesModel(TimeIt):
     is_custom = models.TextField(
         max_length=3,
         choices=AttributesCustom,
-        default=AttributesCustom.NULL
+        default=AttributesCustom.PREDEFINED
     )
     value_ids = models.ManyToManyField(
         AttributeValuesModel,
