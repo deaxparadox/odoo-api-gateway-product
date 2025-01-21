@@ -51,13 +51,20 @@ class AttributesCustom(models.TextChoices):
 
 class AttributeValuesModel(TimeIt):
     name = models.CharField(max_length=120, verbose_name="Name of the attribute value")
-    attribute_id = models.CharField(max_length=10, verbose_name="ID of the parent attribute")
-    # sequence = 
+    attribute_id = models.ForeignKey(
+        "AttributesModel", 
+        verbose_name=_("ID of the parent attribute"), 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name="values"
+    )
+    sequence = models.IntegerField(default=0, verbose_name=_("Display order of the value"))
     is_custom = models.TextField(
         max_length=3,
         choices=AttributesCustom,
         default=AttributesCustom.NULL
     )
+    
 
 
 class AttributesModel(TimeIt):
