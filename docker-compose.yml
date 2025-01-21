@@ -8,6 +8,13 @@ services:
       - type: bind
         source: ./odoo
         target: /app/odoo
+    depends_on:
+      - redis
+  redis:
+    image: redis:5
+    container_name: odoo-redis
+    ports:
+      - 6379:6379:
 
 volumes:
   odoo-server:
