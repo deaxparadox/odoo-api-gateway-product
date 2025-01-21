@@ -58,32 +58,6 @@ class AttributeValuesModel(TimeIt):
         choices=AttributesCustom,
         default=AttributesCustom.NULL
     )
-    
-
-  
-
-class ProductVariantsModel(TimeIt):
-    product_template_id = models.ManyToManyField(
-        ParentProductModel, 
-        verbose_name=_("ID of the parent product template"), 
-        related_name="product_variants"
-    )
-    attribute_values = models.ManyToManyField(
-        AttributeValuesModel, 
-        verbose_name=_("Attributes assigned to the variant"), 
-        related_name="product_variants"
-    )  
-    sku = models.CharField(max_length=120, blank=True, null=True, verbose_name="Stock Keeping Unit, if application")
-    barcode = models.CharField(
-        max_length=120,
-        verbose_name="Barcode of the project"
-    )
-    price_extra = models.FloatField(
-        default=0.0,
-        verbose_name="Price difference from the base project template price"
-    )
-
-
 
 
 class AttributesModel(TimeIt):
@@ -100,4 +74,26 @@ class AttributesModel(TimeIt):
         related_name="attributes"
     )
     
+
+class ProductVariantsModel(TimeIt):
+    product_template_id = models.ManyToManyField(
+        ParentProductModel, 
+        verbose_name=_("ID of the parent product template"), 
+        related_name="product_variants"
+    )
+    attribute_values = models.ManyToManyField(
+        AttributesModel, 
+        verbose_name=_("Attributes assigned to the variant"), 
+        related_name="product_variants"
+    )  
+    sku = models.CharField(max_length=120, blank=True, null=True, verbose_name="Stock Keeping Unit, if application")
+    barcode = models.CharField(
+        max_length=120,
+        verbose_name="Barcode of the project"
+    )
+    price_extra = models.FloatField(
+        default=0.0,
+        verbose_name="Price difference from the base project template price"
+    )
+
 
