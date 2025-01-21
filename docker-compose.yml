@@ -5,7 +5,9 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./odoo:/app/odoo/
+      - type: bind
+        source: ./odoo
+        target: /app/odoo
 
 volumes:
   odoo-server:
