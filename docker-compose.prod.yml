@@ -1,15 +1,15 @@
 services:
   odoo-backend:
-    build: ./odoo
+    build: 
+      context: ./odoo
+      dockerfile: ./Dockerfile.prod
     container_name: odoo-backend-api-services
     ports:
       - 8000:8000
     environment:
       - REDIS_HOST=redis://odoo-redis:6379/0
     volumes:
-      - type: bind
-        source: ./odoo
-        target: /app/odoo
+      - odoo-server:/app/odoo
     depends_on:
       - odoo-redis
     command: sh run.sh

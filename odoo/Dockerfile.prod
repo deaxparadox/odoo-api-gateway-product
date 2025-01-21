@@ -45,7 +45,6 @@ COPY . .
 
 # Change permission of /app/odoo to appuser
 RUN chown appuser:appuser -R /app
-# RUN chmod 777 /app/odoo/db.sqlite3
 
 
 # Switch to the non-privileged user to run the application.

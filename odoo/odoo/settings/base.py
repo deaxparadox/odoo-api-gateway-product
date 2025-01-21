@@ -10,7 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -25,7 +27,9 @@ SECRET_KEY = 'django-insecure-x5p&^m%7@s=vesptui4i2m*bq4j%k*kuc1($c8gr54q=&p*(&5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "*"
+]
 
 
 # Application definition
@@ -155,21 +159,26 @@ REST_FRAMEWORK = {
 }
 
 
+REDIS_HOST = os.environ.get("REDIS_HOST", "redis://127.0.0.1:6379/0")
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379",
+        "LOCATION": REDIS_HOST,
     }
 }
 
 
 
-# 
 # `CELERY CONFIGURATION
-# 
-CELERY_RESULT_BACKEND = 'django-db'
-# celery setting.
 CELERY_CACHE_BACKEND = 'default'  # Default point to Django cache settings
-BROKER_URL = "redis://localhost:6379/0"
-# broker_connection_retry_on_startup
-BROKER_CONNECTION_RETRY_ON_START = True
+CELERY_BROKER_URL = REDIS_HOST
+CELERY_RESULT_BACKEND = REDIS_HOST
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+CELERY_BEAT_SCHEDULE = {
+    "sample_task": {
+        "task": "users.tasks.sample_task",
+        "schedule": crontab(minute="*/1"),
+    },
+}
