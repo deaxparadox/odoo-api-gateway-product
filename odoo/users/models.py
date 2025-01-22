@@ -1,7 +1,28 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
+from helpers import create_variable_hash
 
+@receiver(post_save, sender=User)
+def create_client_user_for_admin(sender, **kwargs):
+    instance = kwargs['instance']
+    print(f"Email: {instance.email}")
+    if hasattr(instance, "email") and len(instance.email) == 0:
+        print(
+            f"\n\tUnable to create ClientUserModel for superuser {instance.username}"
+            "\n\tUser doesnot provided email."
+            "\n\n\tContact admin\n"
+        )
+    else:
+        ClientUserModel.objects.create(
+            user_id=create_variable_hash(instance.email),
+            auth_user=instance
+        )
+        print(f'\n\tClientUserModel created for {instance}\n')
+        
+        
 
 class OdooUserAbstract(models.Model):
     # Email is required for user_id
@@ -26,8 +47,11 @@ class ClientUserModel(OdooUserAbstract):
         on_delete=models.CASCADE,
         related_name="client_user"
     )
-    pass 
+    
 
 class VendorsModel(OdooUserAbstract):
     name = models.CharField(max_length=120, verbose_name="Full name of the user.")
     email = models.EmailField(_("email address"), blank=True)
+    
+    
+    

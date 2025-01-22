@@ -111,8 +111,10 @@ class UserCreateView(APIView):
                 )
             # Create a client user.
             try:
+                user_id = helpers.create_variable_hash(auth_user.email)
+                print(user_id, len(user_id))
                 client_user = ClientUserModel.objects.create(
-                    user_id = helpers.create_variable_hash(auth_user.email),
+                    user_id = user_id,
                     auth_user=auth_user
                 )
             except Exception as e:

@@ -7,3 +7,4 @@ celery==5.4.0
 django-celery-results==2.5.1
 django-celery-beat==2.7.0
 django-taggit==6.1.0
+psycopg2-binary==2.9.10
