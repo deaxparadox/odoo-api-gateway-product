@@ -6,7 +6,8 @@ from users.models import ClientUserModel
 from product.models import ParentProductModel
 
 class BasketModel(models.Model):
-    user_id = models.OneToOneField(
+    # change user_id (docs) to user (for clarity)
+    user = models.OneToOneField(
         "users.ClientUserModel",
         on_delete=models.SET_NULL,
         null=True,

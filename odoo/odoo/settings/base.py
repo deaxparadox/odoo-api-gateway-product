@@ -104,6 +104,9 @@ DATABASES = {
         "PASSWORD": "136900",
         "HOST": "127.0.0.1",
         "PORT": "5432",
+        "TEST": {
+            "NAME": "paradoxtestdb"
+        }
     }
 }
 

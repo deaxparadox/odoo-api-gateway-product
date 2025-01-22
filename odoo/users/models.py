@@ -8,19 +8,19 @@ from helpers import create_variable_hash
 @receiver(post_save, sender=User)
 def create_client_user_for_admin(sender, **kwargs):
     instance = kwargs['instance']
-    print(f"Email: {instance.email}")
-    if hasattr(instance, "email") and len(instance.email) == 0:
-        print(
-            f"\n\tUnable to create ClientUserModel for superuser {instance.username}"
-            "\n\tUser doesnot provided email."
-            "\n\n\tContact admin\n"
-        )
-    else:
-        ClientUserModel.objects.create(
-            user_id=create_variable_hash(instance.email),
-            auth_user=instance
-        )
-        print(f'\n\tClientUserModel created for {instance}\n')
+    if instance.is_superuser:
+        if len(instance.email) == 0:
+            print(
+                f"\n\tUnable to create ClientUserModel for superuser {instance.username}"
+                "\n\tUser doesnot provided email."
+                "\n\n\tContact admin\n"
+            )
+        else:
+            ClientUserModel.objects.create(
+                user_id=create_variable_hash(instance.email),
+                auth_user=instance
+            )
+            print(f'\n\tClientUserModel created for superuser {instance}\n')
         
         
 
