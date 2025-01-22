@@ -1,3 +1,6 @@
 from django.test import TestCase
+from .models import BasketModel
 
-# Create your tests here.
+class TestBasketModel(TestCase):
+    def test_new_instance(self)
+    ...

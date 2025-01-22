@@ -10,12 +10,14 @@ class BasketModel(models.Model):
         "users.ClientUserModel",
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name=_("ID of the user owning the basket.")
+        verbose_name=_("ID of the user owning the basket."),
+        related_name="basket"
     )
     line_ids = models.ForeignKey(
         "product.ParentProductModel",
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name=_("List of basket items")
+        verbose_name=_("List of basket items"),
+        related_name="basket"
     )
     total_price = models.FloatField(default=0., verbose_name=_("Calculated total price of the basket"))
