@@ -1,6 +1,6 @@
 from django.urls import path
 from product.views import product_views
-from product.views import pp_views, pv_views, attr_views
+from product.views import pp_views, pv_views, attr_views, attr_value_views
 
 app_name = "product"
 
@@ -50,5 +50,17 @@ urlpatterns = [
     # GET: Get details of a specific variant
     # PUT: Update variant details
     # DELETE: Delete a variant   
-    path("attributes/<int:id>/", attr_views.AttributesDetailView.as_view(), name="attributes_detail_view")
+    path("attributes/<int:id>/", attr_views.AttributesDetailView.as_view(), name="attributes_detail_view"),
+    
+    
+    # Attributes Category
+    # 
+    # GET: all value based on attribute ID
+    # POST: Create a new value based on attribute ID
+    path("attributes/<int:attr_id>/values/", attr_value_views.AttributeValueView.as_view(), name="av_view"),
+    # 
+    # GET: Get details of a specific value based on ID
+    # PUT: Update value details based on ID
+    # DELETE: Delete a value based on ID
+    path("attributes/<int:attr_id>/values/<int:value_id>/", attr_value_views.AVUpdateDeleteView.as_view(), name="av_create_update_view")
 ]

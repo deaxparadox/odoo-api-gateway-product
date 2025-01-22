@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from helpers.models import TimeIt
 from taggit.managers import TaggableManager
 
@@ -24,7 +26,7 @@ class ProductCategoryModel(TimeIt):
 
     # def __repr__(self)
     def __str__(self) -> str:
-        return "%s" % (self.name)
+        return "%s : %s" % (self.id, self.name)
 
 # Product Template Model
 class ParentProductModel(TimeIt):
@@ -41,7 +43,7 @@ class ParentProductModel(TimeIt):
     active = models.BooleanField(default=True, verbose_name=_("Delete a product"))
 
     def __str__(self) -> str:
-        return "%s" % self.name
+        return "%s : %s" % (self.id, self.name)
 
 class AttributesCustom(models.TextChoices):
     CUSTOM = "CUS", _("Custom")
@@ -68,7 +70,8 @@ class AttributeValuesModel(TimeIt):
         choices=AttributesCustom,
         default=AttributesCustom.PREDEFINED
     )
-    
+    def __str__(self):
+        return f"{self.id} : {self.name}"
 
 
 class AttributesModel(TimeIt):
@@ -85,6 +88,8 @@ class AttributesModel(TimeIt):
         related_name="attributes"
     )
     
+    def __str__(self):
+        return f"{self.id} : {self.name}"
 
 class ProductVariantsModel(TimeIt):
     product_template_id = models.ManyToManyField(
@@ -106,5 +111,19 @@ class ProductVariantsModel(TimeIt):
         default=0.0,
         verbose_name="Price difference from the base project template price"
     )
+    
+    def __str__(self):
+        return f"{self.id} : {self.sku}"
 
 
+
+@receiver(pre_save, sender=AttributeValuesModel)
+def set_sequence(sender, **kwrags):
+    instance = kwrags['instance']
+    last = AttributeValuesModel.objects.last()
+    if not last:
+        instance.sequence = 1
+    else:
+        last.id+=1
+        instance.sequence = last.id
+        

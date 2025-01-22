@@ -240,14 +240,14 @@ class LogoutView(APIView):
             try:
                 refresh_token = RefreshToken(logout_serializer.data.get("refresh"))
                 refresh_token.blacklist()
-                Response({
-                        "message": "Token blacklisted"
+                return Response({
+                        "Message": "Token blacklisted"
                     },
                     status=status.HTTP_202_ACCEPTED
                 )
             except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"Error": "Require `refresh` token to invalid."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"Error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"Error": "Require `refresh` token."}, status=status.HTTP_400_BAD_REQUEST)
     
     
 # Delete user
