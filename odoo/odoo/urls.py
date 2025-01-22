@@ -21,6 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/", include([
         path("", include("users.urls", namespace="users")),
-        path("", include("product.urls", namespace="product"))
+        path("", include("product.urls", namespace="product")),
+        path("", include("basket.urls", namespace="basket"))
     ]))
 ]

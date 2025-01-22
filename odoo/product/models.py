@@ -124,6 +124,7 @@ def set_sequence(sender, **kwrags):
     if not last:
         instance.sequence = 1
     else:
-        last.id+=1
-        instance.sequence = last.id
+        cur = last.sequence
+        cur+=1
+        instance.sequence = cur
         

@@ -9,10 +9,13 @@ class TestAdmin(TestCase):
     def setUp(self):
         self.api_client = APIClient()
         admin_auth_user = User.objects.create_superuser(username="admin", email="admin@email.com", password="136900")
-        admin_client_user = ClientUserModel.objects.create(
-            user_id=helpers.create_variable_hash(admin_auth_user.email),
-            auth_user=admin_auth_user
-        )
+        # admin_client_user = ClientUserModel.objects.create(
+        #     user_id=helpers.create_variable_hash(admin_auth_user.email),
+        #     auth_user=admin_auth_user
+        # )
+        # Superuser ClientUserModel instance is created using `post_save` signal,
+        # see code in `users.models`
+        admin_auth_user = admin_auth_user.client_user
         return super().setUp()
 
     def test_login_and_get_all_users(self):
