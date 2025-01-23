@@ -9,6 +9,15 @@ class PVSerializers(serializers.ModelSerializer):
         model = ProductVariantsModel
         fields = ["id", 'product_template_id', 'attribute_values', 'sku', 'barcode', 'price_extra']
         
+    
+class PVCreateSerializers(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    product_template_id = serializers.PrimaryKeyRelatedField(many=True, queryset=ParentProductModel.objects.all())
+    attribute_values = serializers.PrimaryKeyRelatedField(many=True, queryset=AttributeValuesModel.objects.all())
+    class Meta:
+        model = ProductVariantsModel
+        fields = ["id", 'product_template_id', 'attribute_values', 'sku', 'barcode', 'price_extra']
+        
 
 class PVSerializersDetail(serializers.ModelSerializer):
     

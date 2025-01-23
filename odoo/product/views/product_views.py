@@ -19,7 +19,7 @@ class ProductCategoriesView(APIView):
         elif product_scope == 'false':
             product_qs = product_qs.filter(active=False)
         product_qs_serializer = product_serializer.ProductCategorySerializer(product_qs, many=True)
-        return Response(product_qs_serializer.data, status=status.HTTP_200_OK)
+        return Response({"Message": product_qs_serializer.data}, status=status.HTTP_200_OK)
     
     
     def post(self, request):

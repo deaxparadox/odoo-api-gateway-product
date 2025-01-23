@@ -14,11 +14,29 @@ class BasketModel(models.Model):
         verbose_name=_("ID of the user owning the basket."),
         related_name="basket"
     )
-    line_ids = models.ForeignKey(
+    # line_ids = models.ManyToManyField(
+    #     "product.ParentProductModel",
+    #     verbose_name=_("List of basket items"),
+    #     related_name="basket"
+    # )
+    total_price = models.FloatField(default=0., verbose_name=_("Calculated total price of the basket"))
+    
+class BasketItem(models.Model):
+    basket_id = models.ForeignKey(
+        BasketModel,
+        on_delete=models.SET_NULL,
+        null=True,
+        verbose_name=_("Basket items"),
+        related_name="basket_item"
+    )
+    quantity = models.IntegerField(
+        default=1,
+        verbose_name=_("Quantity")
+    )
+    product = models.OneToOneField(
         "product.ParentProductModel",
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name=_("List of basket items"),
-        related_name="basket"
+        verbose_name=_("List of Products"),
+        related_name="basket_item"
     )
-    total_price = models.FloatField(default=0., verbose_name=_("Calculated total price of the basket"))
