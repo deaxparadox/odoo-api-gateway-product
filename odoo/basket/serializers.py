@@ -31,3 +31,7 @@ class BasketItemAddSerializers(serializers.ModelSerializer):
     class Meta:
         model = ProductVariantsModel
         fields = ['id', 'quantity']
+        
+
+class BasketQuantitySerializer(serializers.Serializer):
+    quantity = serializers.IntegerField()
