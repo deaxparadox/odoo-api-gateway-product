@@ -28,7 +28,15 @@ urlpatterns = [
     # path("users/<str:id>/", views.DeleteUserView.as_view(), name="delete_user")
     
     
-    
     # Vendor endpoints
+    # POST: Create users
+    # path("users/", user_view.UserCreateView.as_view(), name="auth_create_user"),
+    
+    # GET: Get user details
+    # PUT: Update user details
+    # DELETE: Delete users
+    # path("users/<str:user_id>/", user_view.UserSpecificDetailView.as_view(), name="get_user_detail"),
+    
+    
     
 ]

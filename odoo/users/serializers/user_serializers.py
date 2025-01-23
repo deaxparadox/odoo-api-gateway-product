@@ -80,30 +80,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # ... add other user information as needed
 
         return data
-    
-    
-class UserDetailsObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-
-        # Add custom claims
-        token["custom_field"] = "Custom value"
-
-        return token
-
-    def validate(self, attrs):
-        data = super().validate(attrs)
-
-        user = self.user
-        data["user_id"] = self.user.client_user.user_id
-        data["username"] = user.username
-        data['email'] = user.email
-        data['phone'] = user.phone
-        # ... add other user information as needed
-
-        return data
-    
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
