@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import BasketModel
-from product.models import ProductCategoryModel
+from product.models import ProductCategoryModel, ProductVariantsModel
 from product.serializers.pp_serializers import ParentProductModel
 
 
@@ -17,3 +17,7 @@ class BasketCreateSerializer(serializers.ModelSerializer):
         model = BasketModel
         fields = ['id', 'user', 'line_ids', 'total_price']
     
+class BasketItemAddSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = ProductVariantsModel
+        fields = ['id', 'quantity']

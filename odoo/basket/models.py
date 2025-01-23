@@ -33,10 +33,11 @@ class BasketItem(models.Model):
         default=1,
         verbose_name=_("Quantity")
     )
-    product = models.OneToOneField(
-        "product.ParentProductModel",
+    product_id = models.OneToOneField(
+        "product.ParentVariantModel",
         on_delete=models.SET_NULL,
         null=True,
         verbose_name=_("List of Products"),
         related_name="basket_item"
-    )
+    ),
+    attribute_values = models

@@ -74,22 +74,26 @@ class AttributesModel(TimeIt):
         choices=AttributesCustom,
         default=AttributesCustom.PREDEFINED
     )
-    value_ids = models.ManyToManyField(
+    value_ids = models.ForeignKey(
         AttributeValuesModel,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name=_("List of possible values for the attribute"),
-        related_name="attributes"
+        related_name="attribute"
     )
     
 class ProductVariantsModel(TimeIt):
-    product_template_id = models.ManyToManyField(
+    product_template_id = models.ForeignKey(
         ParentProductModel, 
         verbose_name=_("ID of the parent product template"), 
-        related_name="product_variants"
+        related_name="product_variant",
+        on_delete=models.SET_NULL,
+        null=True
     )
     attribute_values = models.ManyToManyField(
         AttributeValuesModel, 
         verbose_name=_("Attributes assigned to the variant"), 
-        related_name="product_variants"
+        related_name="product_variant"
     )  
     sku = models.IntegerField(default=0, verbose_name=_("Stock Keeping Unit, if application"))
     barcode = models.CharField(

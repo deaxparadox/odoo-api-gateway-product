@@ -7,6 +7,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 from .serializers import BasketSerializer
 from .models import BasketModel
+from product.models import ProductVariantsModel
+from product.serializers.pv_serializers import PVSerializers
 from helpers.message import message_collector
 
 def get_user_obj_from_jwt_request(request, /):
@@ -73,7 +75,15 @@ class BasketItem(APIView):
         rmc = message_collector()
         
         try:
-            *auth_user, client_user_obj = get_user_obj_from_jwt_request(request )
+            *auth_user, client_user_obj = get_user_obj_from_jwt_request(request)
+            pv_serializers = PVSerializers(data=request.data)
+            if pv_serializers.is_valid():
+                return Response(
+                    {"Message": pv_serializers.data},
+                    status=status.HTTP_202_ACCEPTED
+                )
+            # rmc(pv_serializers.data)
+            return Response({"Error": pv_serializers.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             rmc(str(e))
             return Response({"Error": rmc()}, status=status.HTTP_400_BAD_REQUEST)
