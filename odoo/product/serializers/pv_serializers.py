@@ -3,7 +3,7 @@ from product.models import ProductVariantsModel, ParentProductModel, AttributeVa
 
 class PVSerializers(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
-    product_template_id = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    product_template_id = serializers.PrimaryKeyRelatedField(read_only=True)
     attribute_values = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     class Meta:
         model = ProductVariantsModel

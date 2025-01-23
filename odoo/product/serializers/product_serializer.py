@@ -4,7 +4,7 @@ from product import models
 
 class ProductCategorySerializer(serializers.ModelSerializer):
     child_ids = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    parent_id = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    parent_id = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = models.ProductCategoryModel
         fields = ['name', 'vendor_id', 'description', 'id', 'child_ids', "parent_id"]

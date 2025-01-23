@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
-from .serializers import BasketSerializer
+from .serializers import BasketSerializer, BasketVariantSerializer
 from .models import BasketModel
 from product.models import ProductVariantsModel
 from product.serializers.pv_serializers import PVSerializers
@@ -32,7 +32,20 @@ class BasketView(APIView):
                 }, status=status.HTTP_404_NOT_FOUND)
             queryset = client_user_obj.basket
             serializer = BasketSerializer(queryset)
-            return Response({"Message": serializer.data}, status=status.HTTP_200_OK)
+            data = {**serializer.data}
+            # Total value of basket
+            basket_items = queryset.basket_item.all()
+            data['total_price'] = sum(x.total_price() for x in basket_items)
+            data['products'] = []
+            for item in basket_items:
+                pv_serializsers = BasketVariantSerializer(item.product_id)
+                q = {"quantity": item.quantity}
+                q.update({**pv_serializsers.data})
+                # q.pop('price_extra')
+                # q.pop("barcode")
+                # q.pop("sku")
+                data["products"].append(q)
+            return Response({"Message": data}, status=status.HTTP_200_OK)
         except TokenError as e:
             rmc(str(e))
             return Response(

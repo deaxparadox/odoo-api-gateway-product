@@ -105,7 +105,8 @@ class ProductVariantsModel(TimeIt):
         verbose_name="Price difference from the base project template price"
     )
     
-
+    def total_price(self):
+        return self.price_extra + self.product_template_id.list_price
 
 
 @receiver(pre_save, sender=AttributeValuesModel)

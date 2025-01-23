@@ -18,6 +18,7 @@ class ProductCategoriesView(APIView):
             product_qs = product_qs.filter(active=True)
         elif product_scope == 'false':
             product_qs = product_qs.filter(active=False)
+        # print(product_qs)
         product_qs_serializer = product_serializer.ProductCategorySerializer(product_qs, many=True)
         return Response({"Message": product_qs_serializer.data}, status=status.HTTP_200_OK)
     
