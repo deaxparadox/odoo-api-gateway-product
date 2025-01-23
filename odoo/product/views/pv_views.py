@@ -13,7 +13,14 @@ from product.serializers import pv_serializers
 class ProductVariantsView(ListCreateAPIView):
     queryset = ProductVariantsModel.objects.all()
     permission_classes = [IsAuthenticated]
-    serializer_class = pv_serializers.PVSerializers
+    
+    def get(self, request, *args, **kwargs):
+        self.serializer_class = pv_serializers.PVSerializers
+        return super().get(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        self.serializer_class = pv_serializers.PVCreateSerializers
+        return super().post(request, *args, **kwargs)
     
 class ProductVariantDetailView(RetrieveAPIView, UpdateAPIView, DestroyAPIView):
     lookup_field = "id"

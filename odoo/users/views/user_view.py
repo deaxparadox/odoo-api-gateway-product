@@ -13,10 +13,9 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from users.serializers import (
+from users.serializers.user_serializers import (
     UserSerializer, 
     CustomTokenObtainPairSerializer,
-    UserDetailsObtainPairSerializer,
     ClientUserDetailSerializer,
     ClientUserUpdateSerializer,
     LogoutSerializer,

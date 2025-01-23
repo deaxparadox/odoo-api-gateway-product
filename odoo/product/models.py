@@ -24,9 +24,6 @@ class ProductCategoryModel(TimeIt):
     description = models.TextField(verbose_name=_("Description of the category"), null=True)
     active = models.BooleanField(default=True, verbose_name=_("Delete the category"))
 
-    # def __repr__(self)
-    def __str__(self) -> str:
-        return "%s : %s" % (self.id, self.name)
 
 # Product Template Model
 class ParentProductModel(TimeIt):
@@ -38,12 +35,9 @@ class ParentProductModel(TimeIt):
     )
     list_price = models.FloatField(default=0.0, verbose_name="Default price of the project")
     description = models.TextField(verbose_name=_("Long description"), null=True, blank=True)
-    image_url = models.URLField(verbose_name="URL of the project's image", null=True)
+    image_url = models.URLField(default="https://", verbose_name="URL of the project's image", null=True)
     tags = TaggableManager()
     active = models.BooleanField(default=True, verbose_name=_("Delete a product"))
-
-    def __str__(self) -> str:
-        return "%s : %s" % (self.id, self.name)
 
 class AttributesCustom(models.TextChoices):
     CUSTOM = "CUS", _("Custom")
@@ -70,8 +64,6 @@ class AttributeValuesModel(TimeIt):
         choices=AttributesCustom,
         default=AttributesCustom.PREDEFINED
     )
-    def __str__(self):
-        return f"{self.id} : {self.name}"
 
 
 class AttributesModel(TimeIt):
@@ -82,27 +74,28 @@ class AttributesModel(TimeIt):
         choices=AttributesCustom,
         default=AttributesCustom.PREDEFINED
     )
-    value_ids = models.ManyToManyField(
+    value_ids = models.ForeignKey(
         AttributeValuesModel,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name=_("List of possible values for the attribute"),
-        related_name="attributes"
+        related_name="attribute"
     )
     
-    def __str__(self):
-        return f"{self.id} : {self.name}"
-
 class ProductVariantsModel(TimeIt):
-    product_template_id = models.ManyToManyField(
+    product_template_id = models.ForeignKey(
         ParentProductModel, 
         verbose_name=_("ID of the parent product template"), 
-        related_name="product_variants"
+        related_name="product_variant",
+        on_delete=models.SET_NULL,
+        null=True
     )
     attribute_values = models.ManyToManyField(
         AttributeValuesModel, 
         verbose_name=_("Attributes assigned to the variant"), 
-        related_name="product_variants"
+        related_name="product_variant"
     )  
-    sku = models.CharField(max_length=120, blank=True, null=True, verbose_name="Stock Keeping Unit, if application")
+    sku = models.IntegerField(default=0, verbose_name=_("Stock Keeping Unit, if application"))
     barcode = models.CharField(
         max_length=120,
         verbose_name="Barcode of the project"
@@ -112,9 +105,8 @@ class ProductVariantsModel(TimeIt):
         verbose_name="Price difference from the base project template price"
     )
     
-    def __str__(self):
-        return f"{self.id} : {self.sku}"
-
+    def total_price(self):
+        return self.price_extra + self.product_template_id.list_price
 
 
 @receiver(pre_save, sender=AttributeValuesModel)

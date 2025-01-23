@@ -5,7 +5,7 @@ from helpers.generate import generate_rand_number_from, generate_uuid4
 class TestProductVariant(TestCase):
     def test_new_instance(self):
         instance = models.ProductVariantsModel.objects.create(
-            sku=generate_uuid4(), 
+            # sku=generate_uuid4(), 
             barcode=generate_uuid4(), 
             price_extra=generate_rand_number_from(500., 100.)
         )
@@ -20,7 +20,7 @@ class TestProductVariant(TestCase):
         #     "description": "something to describe"
         # }
         instance = models.ProductVariantsModel.objects.create(
-            sku=generate_uuid4(), 
+            # sku=generate_uuid4(), 
             barcode=generate_uuid4(), 
             price_extra=generate_rand_number_from(500., 1000.)
         )
@@ -35,7 +35,7 @@ class TestProductVariant(TestCase):
         
     def test_new_instance_add_attributes_relation(self):
         instance = models.ProductVariantsModel.objects.create(
-            sku=generate_uuid4(), 
+            # sku=generate_uuid4(), 
             barcode=generate_uuid4(), 
             price_extra=generate_rand_number_from(500., 1000.)
         )
@@ -48,7 +48,7 @@ class TestProductVariant(TestCase):
         
     def test_new_instance_add_all_relation(self):
         instance = models.ProductVariantsModel.objects.create(
-            sku=generate_uuid4(), 
+            # sku=generate_uuid4(), 
             barcode=generate_uuid4(), 
             price_extra=generate_rand_number_from(500., 1000.)
         )
@@ -68,7 +68,7 @@ class TestProductVariant(TestCase):
     
     def test_new_instance_add_attribute_relation_custom_custom(self):
         instance = models.ProductVariantsModel.objects.create(
-            sku=generate_uuid4(), 
+            # sku=generate_uuid4(), 
             barcode=generate_uuid4(), 
             price_extra=generate_rand_number_from(500., 1000.)
         )
@@ -90,7 +90,7 @@ class TestProductVariant(TestCase):
     
     def test_new_instance_add_attribute_relation_custom_predefined(self):
         instance = models.ProductVariantsModel.objects.create(
-            sku=generate_uuid4(), 
+            # sku=generate_uuid4(), 
             barcode=generate_uuid4(), 
             price_extra=generate_rand_number_from(500., 1000.)
         )
