@@ -23,6 +23,8 @@ def create_client_user_for_admin(sender, **kwargs):
             print(f'\n\tClientUserModel created for superuser {instance}\n')
         
         
+        
+
 
 class OdooUserAbstract(models.Model):
     # Email is required for user_id
@@ -32,7 +34,7 @@ class OdooUserAbstract(models.Model):
         verbose_name="Full identifier of the user"
     )
     phone = models.BigIntegerField(default=0000000000, null=True, blank=True, verbose_name="Phone number")
-    address = models.CharField(default="", max_length=255, blank=True, null=True, verbose_name="Shipping/billing address")
+    # address = models.CharField(default="", max_length=255, blank=True, null=True, verbose_name="Shipping/billing address")
     is_company = models.BooleanField(default=False)
     # is_active is Implemented in `auth_user`
     
@@ -50,8 +52,31 @@ class ClientUserModel(OdooUserAbstract):
     
 
 class VendorsModel(OdooUserAbstract):
-    name = models.CharField(max_length=120, verbose_name="Full name of the user.")
-    email = models.EmailField(_("email address"), blank=True)
+    auth_user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="client_vendor"
+    )
     
     
     
+class AddressModel(models.Model):
+    user_id = models.ForeignKey(
+        ClientUserModel,
+        verbose_name=_("Client user addresss"),
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="address"
+    )
+    vendor_id = models.ForeignKey(
+        VendorsModel,
+        null=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("Vendor user address"),
+        related_name="address"
+    )
+    address1 = models.CharField(max_length=255, verbose_name=_("Street name, locality"))
+    address2 = models.CharField(max_length=255, verbose_name=_("Landmark"), null=True, blank=True)
+    state = models.CharField(max_length=120, verbose_name=_("State of location"))
+    country = models.CharField(max_length=60, verbose_name=_("Country of Location"))

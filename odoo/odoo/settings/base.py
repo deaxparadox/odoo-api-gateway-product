@@ -197,4 +197,8 @@ CELERY_BEAT_SCHEDULE = {
         "task": "users.tasks.sample_task",
         "schedule": crontab(minute="*/1"),
     },
+    "removed_expired_tokens": {
+        "task": "users.tasks.removed_expired_tokens",
+        "schedule": crontab(minute="*/15")
+    }
 }
