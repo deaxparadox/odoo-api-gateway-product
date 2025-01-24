@@ -4,7 +4,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenBlacklistView
 )
-from users.views import user_view
+from .views import user_view
+from .views import vendor_view
 
 app_name = "users"
 
@@ -29,13 +30,14 @@ urlpatterns = [
     
     
     # Vendor endpoints
+    # GET: get all Vendors
     # POST: Create users
-    # path("users/", user_view.UserCreateView.as_view(), name="auth_create_user"),
+    path("vendors/", vendor_view.VendorViews.as_view(), name="create_vendor"),
     
     # GET: Get user details
     # PUT: Update user details
     # DELETE: Delete users
-    # path("users/<str:user_id>/", user_view.UserSpecificDetailView.as_view(), name="get_user_detail"),
+    path("vendors/<str:vendor_id>/", vendor_view.VendorDetailsView.as_view(), name="vendor_detail"),
     
     
     

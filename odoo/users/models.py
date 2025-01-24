@@ -50,8 +50,12 @@ class ClientUserModel(OdooUserAbstract):
     
 
 class VendorsModel(OdooUserAbstract):
-    name = models.CharField(max_length=120, verbose_name="Full name of the user.")
-    email = models.EmailField(_("email address"), blank=True)
+    auth_user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="client_vendor"
+    )
     
     
     

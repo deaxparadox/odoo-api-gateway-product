@@ -33,8 +33,8 @@ class ClientUserUpdateSerializer(serializers.ModelSerializer):
         # would need to be handled.
         auth_user = instance.auth_user
 
-        instance.username = validated_data.get('phone', instance.phone)
-        instance.email = validated_data.get('address', instance.address)
+        instance.phone = validated_data.get('phone', instance.phone)
+        instance.address = validated_data.get('address', instance.address)
         instance.save()
 
         auth_user.first_name = auth_user_data.get(
