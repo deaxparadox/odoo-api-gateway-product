@@ -75,8 +75,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
 
         user = self.user
-        data["user_id"] = self.user.client_user.user_id
-        data["username"] = user.username
+        if hasattr(user, "client_user"):
+            data["user_id"] = self.user.client_user.user_id
+            data["username"] = user.username
+        if hasattr(user, 'client_vendor'):
+            data['vendor_id'] = self.user.client_vendor.user_id
+            data['username'] = user.username
         # ... add other user information as needed
 
         return data

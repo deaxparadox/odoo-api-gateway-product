@@ -12,12 +12,24 @@ from helpers.message import message_collector
 from helpers.response import api_error_response, api_message_response
 from basket.views import get_user_obj_from_jwt_request
 
+
+def get_vendor_obj_from_jwt_request(request, /):
+    token = str(request.auth)
+    auth_user_id = AccessToken(token)['user_id']
+    auth_user_obj = User.objects.get(id=auth_user_id)
+    client_vendor_obj = auth_user_obj.client_vendor
+    return auth_user_id, auth_user_obj, client_vendor_obj
+
 class VendorViews(APIView):
     def get(self, request):
         "Get all vendors"
         rmc = message_collector()
+        self.permission_classes = [IsAuthenticated]
+        if self.check_permissions(request):
+            print("User is authenticated")
+        print("Checking permissions %s" % self.check_permissions(request))
         try:
-            *auth_user, client_user = get_user_obj_from_jwt_request(request)
+            *auth_user, client_user = get_vendor_obj_from_jwt_request(request)
             querset = VendorsModel.objects.all()
             serializer = vendor_serializer.VendorSerializer(querset, many=True)
             return api_message_response(serializer.data, status.HTTP_200_OK)
@@ -34,7 +46,7 @@ class VendorViews(APIView):
         """
         rmc = message_collector()
     
-        print(f"Checking request: {request.data}")
+        # print(f"Checking request: {request.data}")
         try:
             serializer = UserSerializer(data=request.data)
             if serializer.is_valid():
@@ -66,7 +78,7 @@ class VendorViews(APIView):
                 # Create a client user.
                 try:
                     user_id = helpers.create_variable_hash(auth_user.email)
-                    print(user_id, len(user_id))
+                    # print(user_id, len(user_id))
                     client_user = VendorsModel.objects.create(
                         user_id = user_id,
                         auth_user=auth_user
@@ -91,6 +103,7 @@ class VendorViews(APIView):
         
 class VendorDetailsView(APIView):
     permission_classes = [IsAuthenticated]
+    
     def get(self, request, vendor_id):
         rmc = message_collector()
         try:
@@ -135,4 +148,36 @@ class VendorDetailsView(APIView):
             rmc(str(e))
             return api_error_response(rmc, status.HTTP_400_BAD_REQUEST)
         
-    # def dlete
+    def delete(self, request, vendor_id):
+        """
+        Delete vendors detils
+        
+        - Only vendor and admin should be able to delete its details.
+        """
+        rmc = message_collector()
+        try:
+            vendor = VendorsModel.objects.get(user_id=vendor_id)
+            token = str(request.auth)
+            access_token = AccessToken(token)
+            auth_user_id = access_token['user_id']
+            auth_user = User.objects.get(id=auth_user_id)
+            if vendor.user_id != auth_user.client_vendor.user_id:
+                rmc("Invalid access token and user_id")
+                return api_error_response(rmc, status.HTTP_401_UNAUTHORIZED)
+            auth_user.is_active = False;
+            auth_user.save()
+            rmc("Vendor deleted successfully")
+            return api_message_response(rmc, status.HTTP_204_NO_CONTENT)
+        except User.DoesNotExist as e:
+            rmc(str(e))
+            return api_error_response(rmc, status.HTTP_400_BAD_REQUEST)
+        except TokenError as e:
+            rmc(str(e))
+            return api_error_response(rmc, status.HTTP_400_BAD_REQUEST)
+        except VendorsModel.DoesNotExist as e:
+            rmc(str(e))
+            return api_error_response(rmc, status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            rmc(str(e))
+            return api_error_response(rmc, status.HTTP_400_BAD_REQUEST)
+        
