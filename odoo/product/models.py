@@ -9,17 +9,24 @@ from taggit.managers import TaggableManager
 # Product Category model
 class ProductCategoryModel(TimeIt):
     name = models.CharField(max_length=120, verbose_name=_("Name of the category"))
-    vendor_id = models.CharField(max_length=120, verbose_name=_("The product owner"))
+    vendor_id = models.ForeignKey(
+        "users.VendorsModel",
+        verbose_name=_("ID of the Vendor"),
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="product_category"
+    )
     parent_id = models.OneToOneField(
         "self",
         verbose_name=_("ID of the parent Category"),
         on_delete=models.SET_NULL,
         null=True,
-        default=None
+        default=None,
+        related_name="product_category"
     )
     child_ids = models.ManyToManyField(
         "self",
-        verbose_name=_("List of child categories")
+        verbose_name=_("List of child categories"),
     )
     description = models.TextField(verbose_name=_("Description of the category"), null=True)
     active = models.BooleanField(default=True, verbose_name=_("Delete the category"))

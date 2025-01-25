@@ -13,7 +13,6 @@ class BasketVariantSerializer(serializers.ModelSerializer):
         model = ProductVariantsModel
         fields = ["id", 'product_template_id', 'attribute_values']
         
-    
 
 class BasketSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
@@ -27,11 +26,14 @@ class BasketCreateSerializer(serializers.ModelSerializer):
         model = BasketModel
         fields = ['id', 'user', 'total_price']
     
-class BasketItemAddSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = ProductVariantsModel
-        fields = ['id', 'quantity']
+class BasketItemAddSerializers(serializers.Serializer):
+    product_template_id = serializers.IntegerField()
+    quantity = serializers.IntegerField()
+    # class Meta:
+    #     model = ProductVariantsModel
+    #     fields = ['product_template_id', 'quantity']
         
 
 class BasketQuantitySerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
+    basket_item_id = serializers.IntegerField()

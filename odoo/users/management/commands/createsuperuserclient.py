@@ -12,20 +12,8 @@ class Command(BaseCommand):
         parser.add_argument("--user_id", default=-1, type=int)
 
     def handle(self, *args, **options):
-        # for poll_id in options["poll_ids"]:
-        #     try:
-        #         poll = Poll.objects.get(pk=poll_id)
-        #     except Poll.DoesNotExist:
-        #         raise CommandError('Poll "%s" does not exist' % poll_id)
-
-        #     poll.opened = False
-        #     poll.save()
-
-        #     self.stdout.write(
-        #         self.style.SUCCESS('Successfully closed poll "%s"' % poll_id)
-        #     )
         user_id = options['user_id']
-        # print(user_id)
+        
         if user_id == -1:
             self.stdout.write("Creating client_user_model for all admin accounts\n")
             # get all user superuser

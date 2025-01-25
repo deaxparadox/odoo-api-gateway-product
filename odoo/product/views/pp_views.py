@@ -2,19 +2,25 @@
 
 
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework import status
 from product.serializers import pp_serializers
 from product.models import ParentProductModel
 
+class OnlyVendor(BasePermission):
+    def has_permission(self, request, view):
+        return hasattr(request.user, "client_vendor")
+
 class ParentProductView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     
     def get(self, request):
         """
         Get all parent products.
         """
+        self.permission_classes = [IsAuthenticated]
+        self.check_permissions(request)
         qs = ParentProductModel.objects.all()
         qs_serializer = pp_serializers.PPSerializers(qs, many=True)
         return Response({"Products": qs_serializer.data}, status=status.HTTP_200_OK)
@@ -24,6 +30,8 @@ class ParentProductView(APIView):
         """
         Create a new product.
         """
+        self.permission_classes = [IsAuthenticated, OnlyVendor]
+        self.check_permissions(request)
         try:
             # print(request.data)
             pps = pp_serializers.PPCreateSerializer(data=request.data)
@@ -37,12 +45,13 @@ class ParentProductView(APIView):
             return Response({"Error": [str(e)]}, status=status.HTTP_400_BAD_REQUEST)
         
 class ParentProductDetailView(APIView):
-    permission_classes = [IsAuthenticated]
     
     def get(self, request, id: int):
         """
         Get details of a specific product.
         """
+        self.permission_classes = [IsAuthenticated]
+        self.check_permissions(request)
         try:
             qs = ParentProductModel.objects.filter(id=id)
             if len(qs) == 0: return Response({"Message": ['Product doesnot exists']}, status=status.HTTP_400_BAD_REQUEST)
@@ -57,6 +66,8 @@ class ParentProductDetailView(APIView):
         """
         Update product details.
         """
+        self.permission_classes = [IsAuthenticated, OnlyVendor]
+        self.check_permissions(request)
         try:
             qs = ParentProductModel.objects.get(id=id)
             serializer = pp_serializers.PPCreateSerializer(data=request.data)
@@ -72,6 +83,8 @@ class ParentProductDetailView(APIView):
         """
         Delete a product.
         """
+        self.permission_classes = [IsAuthenticated, OnlyVendor]
+        self.check_permissions(request)
         try:
             qs = ParentProductModel.objects.get(id=id)
             if not qs.active:
