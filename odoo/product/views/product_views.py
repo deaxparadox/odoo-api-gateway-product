@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
@@ -45,12 +45,10 @@ class ProductCategoriesView(APIView):
         self.permission_classes = [IsAuthenticated, OnlyVendor]
         self.check_permissions(request)
         try:
-            access_token = AccessToken(str(request.auth))
-            client_vendor = User.objects.get(id=access_token['user_id']).client_vendor
             product_create_new = product_serializer.PCCreateSerializer(data=request.data)
             if product_create_new.is_valid():
                 product_instance = product_create_new.create(product_create_new.validated_data)
-                product_instance.vendor_id = client_vendor
+                product_instance.vendor_id = request.user.client_vendor
                 product_instance.save()
                 return Response({"Message": "New category created"}, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -58,12 +56,15 @@ class ProductCategoriesView(APIView):
     
     
 class ProductView(APIView):
-    permission_classes = [IsAuthenticated]
+    
+    # permission_classes = [IsAuthenticatedOrReadOnly]
     
     def get(self, request, id):
         """
         Get details of a specific category
         """
+        self.permission_classes = [IsAuthenticatedOrReadOnly]
+        self.check_permissions()
         try:
             product_qs = models.ProductCategoryModel.objects.get(id=id)
             if not product_qs.active:
@@ -87,6 +88,8 @@ class ProductView(APIView):
         """
         Update a category
         """
+        self.permission_classes = [IsAuthenticated, OnlyVendor]
+        self.check_permissions()
         
         update_serializer = product_serializer.ProductCategoryCreateSerializer(data=request.data)
         
@@ -122,6 +125,9 @@ class ProductView(APIView):
         """
         Delete a category
         """
+        self.permission_classes = [IsAuthenticated, OnlyVendor]
+        self.check_permissions()
+        
         try:
             product = models.ProductCategoryModel.objects.get(id=id)
             product.delete()

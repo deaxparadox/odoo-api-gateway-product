@@ -27,6 +27,7 @@ class ProductCategoryModel(TimeIt):
     child_ids = models.ManyToManyField(
         "self",
         verbose_name=_("List of child categories"),
+        symmetrical=False
     )
     description = models.TextField(verbose_name=_("Description of the category"), null=True)
     active = models.BooleanField(default=True, verbose_name=_("Delete the category"))
