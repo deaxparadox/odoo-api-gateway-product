@@ -16,7 +16,7 @@ class ProductCategoryModel(TimeIt):
         null=True,
         related_name="product_category"
     )
-    parent_id = models.OneToOneField(
+    parent_id = models.ForeignKey(
         "self",
         verbose_name=_("ID of the parent Category"),
         on_delete=models.SET_NULL,

@@ -7,10 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from product.serializers import pp_serializers
 from product.models import ParentProductModel
-
-class OnlyVendor(BasePermission):
-    def has_permission(self, request, view):
-        return hasattr(request.user, "client_vendor")
+from helpers.permissions import OnlyVendor
 
 class ParentProductView(APIView):
     # permission_classes = [IsAuthenticated]
