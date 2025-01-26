@@ -15,6 +15,8 @@ urlpatterns = [
     # PUT: Update category details
     # DELETE: Delete a category
     path("categories/<int:id>/", product_views.ProductView.as_view(), name="product_categories_detail_view"),
+    # GET: Product under a category
+    path("categories/<int:id>/products/", product_views.ProductsUnderCategoryVeiw.as_view(), name="product_categories_detail_view"),
     
     
     # Parent product Category

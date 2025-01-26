@@ -119,11 +119,24 @@ class ProductView(APIView):
     
 
 class ProductsUnderCategoryVeiw(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     
     def get(self, request, id: int) -> Response:
         """
         Get all products under a category
         """
-        # product_qs = models.ProductCategoryModel.objects.create()
-        return Response({"Message": "Get all products under a category"}, status=status.HTTP_200_OK)
+        try:
+            product_category = models.ProductCategoryModel.objects.get(id=id)
+            product_qs = product_category.parent_product.all()
+            # if product_scope == 'true':
+            #     product_qs = product_qs.filter(active=True)
+            # elif product_scope == 'false':
+            #     product_qs = product_qs.filter(active=False)
+            # print(product_qs)
+            product_qs_serializer = product_serializer.ProductCategorySerializer(product_qs, many=True)
+            return Response({"Message": product_qs_serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"Error": str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
