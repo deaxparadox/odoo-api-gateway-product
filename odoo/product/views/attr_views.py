@@ -61,6 +61,14 @@ class AttributesDetailView(RetrieveAPIView, UpdateAPIView, DestroyAPIView):
         return Response({"Message": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
     def delete(self, request, *args, **kwargs):
+        self.instance = self.get_object()
         response = super().delete(request, *args, **kwargs)
+        notify = NotificationModel(
+            title="Deleted: %s" % self.instance.name,
+            body="Attribute name %s and id %s deleted successfully" % (self.instance.name, self.instance.id)
+        )
+        notify.save()
+        notify.vendor_user.add(request.user.client_vendor)
+        # update response with message
         response.data = {"Message": "Variant Deleted Successfully"}
         return response

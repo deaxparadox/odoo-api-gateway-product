@@ -109,6 +109,15 @@ class ProductView(APIView):
                 if not product_qs.active:
                     return Response({"Message": ["Product doesnot exists"]}, status=status.HTTP_400_BAD_REQUEST)
                 product_instance = update_serializer.update(product_qs, update_serializer.validated_data)
+                
+                notify_instance = NotificationModel.objects.create(
+                    title="Update: Product category",
+                    body="Product category with id %s updated successfully" % product_instance.name,
+                )
+                # notify the vendor about his new category
+                notify_instance.save()
+                notify_instance.vendor_user.add(product_instance.vendor_id)
+                
                 return Response(
                     update_serializer.data, 
                     status=status.HTTP_202_ACCEPTED
@@ -135,11 +144,21 @@ class ProductView(APIView):
         Delete a category
         """
         self.permission_classes = [IsAuthenticated, OnlyVendor]
-        self.check_permissions()
+        self.check_permissions(request)
         
         try:
-            product = models.ProductCategoryModel.objects.get(id=id)
-            product.delete()
+            product_instance = models.ProductCategoryModel.objects.get(id=id)
+            
+            notify_instance = NotificationModel.objects.create(
+                title="Deleted: Product category",
+                body="Product category with id %s deleted successfully" % product_instance.name,
+            )
+            # notify the vendor about his new category
+            notify_instance.save()
+            notify_instance.vendor_user.add(product_instance.vendor_id)
+            
+            product_instance.delete()
+            
             return Response({"Message": "Delete a category"}, status=status.HTTP_204_NO_CONTENT)
             
         # Doesnotexist exception
