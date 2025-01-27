@@ -121,10 +121,12 @@ class ProductVariantsModel(TimeIt):
 def set_sequence(sender, **kwrags):
     instance = kwrags['instance']
     last = AttributeValuesModel.objects.last()
+    
+    
     if not last:
         instance.sequence = 1
     else:
         cur = last.sequence
         cur+=1
         instance.sequence = cur
-        
+    

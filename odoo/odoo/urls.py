@@ -22,6 +22,7 @@ urlpatterns = [
     path("api/", include([
         path("", include("users.urls", namespace="users")),
         path("", include("product.urls", namespace="product")),
-        path("", include("basket.urls", namespace="basket"))
+        path("", include("basket.urls", namespace="basket")),
+        path("", include("notifications.urls", namespace="notifications"))
     ]))
 ]

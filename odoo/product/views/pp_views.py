@@ -2,7 +2,7 @@
 
 
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import status
 from product.serializers import pp_serializers
@@ -15,8 +15,10 @@ class ParentProductView(APIView):
     def get(self, request):
         """
         Get all parent products.
+        
+        - Permission: is set to Authentication and ReadOnly for unauthenticated user.
         """
-        self.permission_classes = [IsAuthenticated]
+        self.permission_classes = [IsAuthenticatedOrReadOnly]
         self.check_permissions(request)
         qs = ParentProductModel.objects.all()
         qs_serializer = pp_serializers.PPSerializers(qs, many=True)

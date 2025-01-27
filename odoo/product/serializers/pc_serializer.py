@@ -8,10 +8,11 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         model = models.ProductCategoryModel
         fields = ['name', 'vendor_id', 'description', 'id', 'child_ids', "parent_id"]
         
-class ProductCategoryCreateSerializer(serializers.ModelSerializer):
+class ProductCategoryUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProductCategoryModel
         fields = ['name', 'vendor_id', 'description', "parent_id", "child_ids"]
+        
             
 
 class PCCreateSerializer(serializers.Serializer):
@@ -65,19 +66,15 @@ class PCCreateSerializer(serializers.Serializer):
                 raise models.ProductCategoryModel.DoesNotExist(str(e))
             for child in childs:
                 instance.child_ids.add(child.id)
-                
         return instance
-            
+
 class PCCreateReturnSerializer(serializers.ModelSerializer):
+    child_ids = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    parent_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    vendor_id = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = models.ProductCategoryModel
-        fields = ["name", "vendor_id", "description", "id", "parent_id"]
-        
-    def update(self, instance, validated_data, call_type: str = "update"):
-        """
-        Call update must be specified (either `update` or `create`), default to `update`
-        """
-        return super().update(instance, validated_data)
+        fields = ["name", "vendor_id", "description", "id", "parent_id", "child_ids"]
     
             
 class PCUpdateSerializer(serializers.ModelSerializer):

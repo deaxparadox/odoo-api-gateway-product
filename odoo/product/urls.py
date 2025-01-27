@@ -1,6 +1,5 @@
 from django.urls import path
-from product.views import product_views
-from product.views import pp_views, pv_views, attr_views, attr_value_views
+from product.views import pp_views, pv_views, attr_views, attr_value_views, pc_view
 
 app_name = "product"
 
@@ -10,13 +9,13 @@ urlpatterns = [
     # 
     # GET: Get all product categories
     # POST: Create a new product
-    path("categories/", product_views.ProductCategoriesView.as_view(), name="product_categories_view"),
+    path("categories/", pc_view.ProductCategoriesView.as_view(), name="product_categories_view"),
     # GET: Get detail of specific category (using id)
     # PUT: Update category details
     # DELETE: Delete a category
-    path("categories/<int:id>/", product_views.ProductView.as_view(), name="product_categories_detail_view"),
+    path("categories/<int:id>/", pc_view.ProductView.as_view(), name="product_categories_detail_view"),
     # GET: Product under a category
-    path("categories/<int:id>/products/", product_views.ProductsUnderCategoryVeiw.as_view(), name="product_categories_detail_view"),
+    path("categories/<int:id>/products/", pc_view.ProductsUnderCategoryVeiw.as_view(), name="product_categories_detail_view"),
     
     
     # Parent product Category

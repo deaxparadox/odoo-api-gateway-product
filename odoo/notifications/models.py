@@ -11,11 +11,15 @@ class NotificationStatusChoices(models.IntegerChoices):
 class NotificationModel(TimeIt):
     title = models.CharField(max_length=120, verbose_name=_("Title of the notification."))
     body = models.CharField(max_length=255, verbose_name=_("Main content of the notification"))
-    user_ids = models.ForeignKey(
-        User,
+    client_user = models.ManyToManyField(
+        "users.ClientUserModel",
         verbose_name=_("List of users the notification is sent to"),
-        on_delete=models.SET_NULL,
-        null=True
+        related_name="notifications"
+    )
+    vendor_user = models.ManyToManyField(
+        "users.VendorsModel",
+        verbose_name=_("List of notification for the vendor"),
+        related_name="notifications"
     )
     status = models.IntegerField(
         default=NotificationStatusChoices.PENDING,

@@ -8,12 +8,16 @@ from product.models import (
     AttributesCustom
 )
 from product.serializers.attr_value_serializer import (
-    AttributeValueSerializer
+    AttributeValueSerializer,
+    AttributeValueUpdateSerializer,
+    AVCreateSerializer
 )
+from notifications.models import NotificationModel
 from helpers.message import message_collector
+from helpers.permissions import OnlyVendor
 
 class AttributeValueView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OnlyVendor]
     
     def get(self, request, attr_id: int):
         """
@@ -24,7 +28,10 @@ class AttributeValueView(APIView):
         try:
             queryset = AttributesModel.objects.get(id=attr_id)
             serializer = AttributeValueSerializer(queryset.values.all(), many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                {"Message": serializer.data},
+                status=status.HTTP_200_OK
+            )
         except AttributesModel.DoesNotExist as e:
             res_messages.append(str(e))
             return Response(
@@ -54,25 +61,20 @@ class AttributeValueView(APIView):
         """
         res_messages = []
         try:
-            serializer = AttributeValueSerializer(data=request.data)
+            serializer = AVCreateSerializer(data=request.data)
             if serializer.is_valid():
                 # Since attribute_id is a ForiegnKey with on_delete
                 # set to null, therefore creating new will be not raise error,
-                # it will be default value to null.
+                # it will have a default value of null.
                 # 
-                # Tte AttributeValue must be created with attribute_id, because request
-                # require the the attribute_id in path.
+                # Tte AttributeValue must exist for the given attribute_id in the path.
                 # 
-                # If attribute_id is message,return a 400 status code.
-                if not serializer.validated_data.get("attribute_id"):
-                    res_messages.append("attribute_id cannot be empty")
-                    return Response({"Message": res_messages}, status=status.HTTP_400_BAD_REQUEST)
                 # Check for similar AttributeValues existence,
                 # using the name fields, if name exist, then return
                 # 302 found repsonse, else create a new attribute value.
                 post_value_name = serializer.validated_data.get('name')
                 filter_values = AttributeValuesModel.objects.filter(name=post_value_name)
-                print([str(q) for q in filter_values])
+                print([str(q) for q in filter_values])  
                 if len(filter_values) > 0:
                     for q in filter_values:
                         if q.name == post_value_name:
@@ -81,13 +83,35 @@ class AttributeValueView(APIView):
                                 {"Message": res_messages},
                                 status=status.HTTP_302_FOUND
                             )
-                serializer.save()
+                instance = serializer.save()
+                instance.attribute_id = AttributesModel.objects.get(id=attr_id)
+                instance.save()
+                notify = NotificationModel(
+                    title="Attribute value created successfully",
+                    body="Attribute value %s with id %s created successfully" % (instance.name, instance.id)
+                )
+                notify.save()
+                notify.vendor_user.add(request.user.client_vendor)
                 res_messages.append("Successfully created attribute value")
                 return Response({"Message": res_messages}, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except AttributesModel.DoesNotExist as e:
+        except AttributeValuesModel.DoesNotExist as e:
+            # If the given attribute ID doesnot exists,
+            # delete new attribute value instance.
             res_messages.append(str(e))
+            instance.delete()
+            return Response(
+                {
+                    "Error": res_messages
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except AttributesModel.DoesNotExist as e:
+            # If the given attribute ID doesnot exists,
+            # delete new attribute value instance.
+            res_messages.append(str(e))
+            instance.delete()
             return Response(
                 {
                     "Error": res_messages
@@ -106,7 +130,7 @@ class AttributeValueView(APIView):
         
     
 class AVUpdateDeleteView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OnlyVendor]
     
     def put(self, request, attr_id, value_id):
         """
@@ -121,34 +145,26 @@ class AVUpdateDeleteView(APIView):
         """
         res_messages = message_collector()
         try:
-            serializer = AttributeValueSerializer(data=request.data)
+            serializer = AttributeValueUpdateSerializer(data=request.data)
             if serializer.is_valid():
-                # fetching attribute id throught value id
+                # fetching attribute_id throught attribute value_id
                 instance_value = AttributeValuesModel.objects.get(id=value_id)
                 instance_attr = instance_value.attribute_id
-                # path attr_id should be instance attribute id
+                # path attr_id should be instance attribute value_id
                 if instance_attr.id != attr_id:
                     res_messages("Invalid attribute id and valud id")
                     return Response(
                         {"Message": res_messages()},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                # attribute cannot be updated
-                if serializer.validated_data.get("attribute_id", None):
-                    res_messages("Attribute field cannot be updated.")
-                    return Response(
-                        {"Message": res_messages()},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                # sequence fields cannot be updated
-                if serializer.validated_data.get("sequence", None):
-                    res_messages("Sequence field cannot be updated.")
-                    return Response(
-                        {"Message": res_messages()},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
                 instance = serializer.update(instance_value, serializer.validated_data)
                 res_messages("Successfully update attribute value %d" % instance.id)
+                notify = NotificationModel(
+                    title="Attribute value update successfully",
+                    body="Attribute value %s with id %s updated successfully" % (instance.name, instance.id)
+                )
+                notify.save()
+                notify.vendor_user.add(request.user.client_vendor)
                 return Response({"Message": res_messages()})
         except AttributeValuesModel.DoesNotExist as e:
             res_messages(str(e))
@@ -175,8 +191,17 @@ class AVUpdateDeleteView(APIView):
             if instance_value.attribute_id is None or instance_value.attribute_id.id != attr_id:
                 rmc("Invalid attributed_id and valid_id")
                 return Response({"Message": rmc()}, status=status.HTTP_400_BAD_REQUEST)
+            # create a notification before deleting the instance
+            notify = NotificationModel(
+                title="Attribute value deleted successfully",
+                body="Attribute value %s with id %s delted successfully" % (instance_value.name, instance_value.id)
+            )
+            notify.save()
+            notify.vendor_user.add(request.user.client_vendor)
+            # delete the instance
             instance_value.delete()
-            rmc("Successfully delete the object")
+            rmc("Successfully delete the value")
+            
             return Response({"Message": rmc()}, status=status.HTTP_204_NO_CONTENT)
         except AttributeValuesModel.DoesNotExist as e:
             rmc(str(e))

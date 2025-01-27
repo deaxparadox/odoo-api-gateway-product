@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
 from product import models
-from product.serializers import product_serializer
+from notifications.models import NotificationModel
+from product.serializers import pc_serializer
 from helpers.permissions import OnlyVendor
 
 class ProductCategoriesView(APIView):
@@ -21,7 +22,7 @@ class ProductCategoriesView(APIView):
         elif product_scope == 'false':
             product_qs = product_qs.filter(active=False)
         # print(product_qs)
-        product_qs_serializer = product_serializer.ProductCategorySerializer(product_qs, many=True)
+        product_qs_serializer = pc_serializer.ProductCategorySerializer(product_qs, many=True)
         return Response({"Message": product_qs_serializer.data}, status=status.HTTP_200_OK)
     
     
@@ -45,12 +46,20 @@ class ProductCategoriesView(APIView):
         self.permission_classes = [IsAuthenticated, OnlyVendor]
         self.check_permissions(request)
         try:
-            product_create_new = product_serializer.PCCreateSerializer(data=request.data)
+            product_create_new = pc_serializer.PCCreateSerializer(data=request.data)
             if product_create_new.is_valid():
                 product_instance = product_create_new.create(product_create_new.validated_data)
                 product_instance.vendor_id = request.user.client_vendor
                 product_instance.save()
-                return Response({"Message": "New category created"}, status=status.HTTP_201_CREATED)
+                notify_instance = NotificationModel.objects.create(
+                    title="Product category created",
+                    body="New product category created successfully",
+                )
+                # notify the vendor about his new category
+                notify_instance.save()
+                notify_instance.vendor_user.add(product_instance.vendor_id)
+                ret_serial = pc_serializer.PCCreateReturnSerializer(product_instance)
+                return Response({"Message": ret_serial.data}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"Error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -71,7 +80,7 @@ class ProductView(APIView):
                 return Response({"Message": [
                     "Product doesnot exist"
                 ]}, status=status.HTTP_400_BAD_REQUEST)    
-            product_qs_serializer = product_serializer.ProductCategorySerializer(product_qs)
+            product_qs_serializer = pc_serializer.ProductCategorySerializer(product_qs)
             return Response(product_qs_serializer.data, status=status.HTTP_200_OK)
         # Not product exist exception
         except models.ProductCategoryModel.DoesNotExist as e:
@@ -89,9 +98,9 @@ class ProductView(APIView):
         Update a category
         """
         self.permission_classes = [IsAuthenticated, OnlyVendor]
-        self.check_permissions()
+        self.check_permissions(request)
         
-        update_serializer = product_serializer.ProductCategoryCreateSerializer(data=request.data)
+        update_serializer = pc_serializer.ProductCategoryUpdateSerializer(data=request.data)
         
         try:
             if update_serializer.is_valid():
@@ -157,7 +166,7 @@ class ProductsUnderCategoryVeiw(APIView):
             # elif product_scope == 'false':
             #     product_qs = product_qs.filter(active=False)
             # print(product_qs)
-            product_qs_serializer = product_serializer.ProductCategorySerializer(product_qs, many=True)
+            product_qs_serializer = pc_serializer.ProductCategorySerializer(product_qs, many=True)
             return Response({"Message": product_qs_serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(

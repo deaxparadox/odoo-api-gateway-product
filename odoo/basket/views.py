@@ -18,6 +18,7 @@ from .models import (
 from product.models import ProductVariantsModel
 from product.serializers.pv_serializers import PVSerializers
 from helpers.message import message_collector
+from helpers.permissions import OnlyUser
 
 def get_user_obj_from_jwt_request(request, /):
     token = str(request.auth)
@@ -51,7 +52,7 @@ class Basket:
         return data
 
 class BasketView(APIView, Basket):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OnlyUser]
     
     def get(self, request):
         rmc = message_collector()
@@ -64,27 +65,6 @@ class BasketView(APIView, Basket):
                     "Error": rmc(),
                 }, status=status.HTTP_404_NOT_FOUND)
             data = self.build_basket(client_user_obj.basket)
-            # queryset = client_user_obj.basket
-            # serializer = BasketSerializer(queryset)
-            # data = {**serializer.data}
-            # # Total value of basket
-            # basket_items = queryset.basket_item.all()
-            # data['total_price'] = sum(x.total_price() for x in basket_items)
-            # data['products'] = []
-            # for item in basket_items:
-            #     pv_serializsers = BasketVariantSerializer(item.product_id)
-            #     q = {
-            #         "quantity": item.quantity,
-            #         "basket_item_id": item.id
-            #     }
-            #     q.update({**pv_serializsers.data})
-            #     # change variant referene from `id` to `product_variant_id`
-            #     product_variant_id = q.pop("id")
-            #     q.update({"product_variant_id": product_variant_id})
-            #     # q.pop('price_extra')
-            #     # q.pop("barcode")
-            #     # q.pop("sku")
-            #     data["products"].append(q)
             return Response({"Message": data}, status=status.HTTP_200_OK)
         except TokenError as e:
             rmc(str(e))
@@ -122,7 +102,7 @@ class BasketView(APIView, Basket):
             )
             
 class BasketItem(APIView, Basket):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OnlyUser]
     
     def post(self, request):
         # add item to the basket
@@ -173,7 +153,7 @@ class BasketItem(APIView, Basket):
             return Response({"Error": rmc()}, status=status.HTTP_400_BAD_REQUEST)
     
 class BasketModifyView(APIView, Basket):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OnlyUser]
     
     def put(self, request, basket_id):
         """
@@ -201,24 +181,6 @@ class BasketModifyView(APIView, Basket):
                 basket_item.quantity = quantity_serializer.validated_data['quantity']
                 basket_item.save()
                 
-                # fetch data for display
-                # serializer = BasketSerializer(basket)
-                # data = {**serializer.data}
-                # # Total value of basket
-                # basket_items = basket.basket_item.all()
-                # data['total_price'] = sum(x.total_price() for x in basket_items)
-                # data['products'] = []
-                # for item in basket_items:
-                #     pv_serializsers = BasketVariantSerializer(item.product_id)
-                #     q = {
-                #         "quantity": item.quantity,
-                #         "basket_item_id": item.id
-                #     }
-                #     q.update({**pv_serializsers.data})
-                #     # change variant referene from `id` to `product_variant_id`
-                #     product_variant_id = q.pop("id")
-                #     q.update({"product_variant_id": product_variant_id})
-                #     data["products"].append(q)
                 data = self.build_basket(basket)
                 return Response({"Message": data}, status=status.HTTP_200_OK)
             return Response({"Error": quantity_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -256,7 +218,7 @@ class BasketModifyView(APIView, Basket):
         
         
 class BasketClear(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OnlyUser]
     def post(self, request):
         rmc = message_collector()
         try:
