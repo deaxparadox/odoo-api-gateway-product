@@ -22,7 +22,12 @@ class BasketModel(models.Model):
     total_price = models.FloatField(default=0., verbose_name=_("Calculated total price of the basket"))
     
     def set_total_price(self):
-        self.total_price = self.basket_item.total_price()
+        total = 0.
+        for item in self.basket_item.all():
+            item.set_total_price()
+            item.save()
+            total+=item.total_price
+        self.total_price = total
     
 class BasketItem(models.Model):
     basket_id = models.ForeignKey(
@@ -36,13 +41,17 @@ class BasketItem(models.Model):
         default=1,
         verbose_name=_("Quantity")
     )
-    product_id = models.OneToOneField(
+    product_id = models.ForeignKey(
         "product.ProductVariantsModel",
         on_delete=models.SET_NULL,
         null=True,
         verbose_name=_("List of Products"),
         related_name="basket_item"
     )
+    total_price = models.FloatField(
+        default=0.0,
+        verbose_name=_("Total price of basket item")
+    )
     
-    def total_price(self):
-        return float(self.quantity) * self.product_id.total_price()
+    def set_total_price(self):
+        self.total_price = float(self.quantity) * self.product_id.get_total_price()

@@ -111,7 +111,10 @@ class ProductVariantsModel(TimeIt):
         verbose_name="Price difference from the base project template price"
     )
     
-    def total_price(self):
+    def get_unit_price(self):
+        return self.price_extra + self.product_template_id.list_price
+    
+    def get_total_price(self):
         return self.price_extra + self.product_template_id.list_price
 
 
