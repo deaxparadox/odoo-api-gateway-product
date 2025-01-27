@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from product.serializers import pp_serializers
 from product.models import ParentProductModel
+from notifications.models import NotificationModel
 from helpers.permissions import OnlyVendor
 
 class ParentProductView(APIView):
@@ -28,6 +29,15 @@ class ParentProductView(APIView):
     def post(self, request):
         """
         Create a new product.
+        
+        Required data in request:
+        1. name
+        2. category_ids: If not category ids are given, then an empty list must be passed.
+        
+        Optional data in request:
+        1. description
+        2. Image URL
+        3. List price
         """
         self.permission_classes = [IsAuthenticated, OnlyVendor]
         self.check_permissions(request)
@@ -36,7 +46,14 @@ class ParentProductView(APIView):
             pps = pp_serializers.PPCreateSerializer(data=request.data)
             if pps.is_valid():
                 instance = pps.save()
-                ret_serializer = pp_serializers.PPCreateReturnSerializer(instance)
+                ret_serializer = pp_serializers.PPSerializers(instance)
+                
+                notify = NotificationModel.objects.create(
+                    title="Created: Product",
+                    body="Product name %s with ID %s created successfully" % (instance.name, instance.id)
+                )
+                notify.vendor_user.add(request.user.client_vendor)
+                
                 return Response(ret_serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(pps.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -71,8 +88,16 @@ class ParentProductDetailView(APIView):
             qs = ParentProductModel.objects.get(id=id)
             serializer = pp_serializers.PPCreateSerializer(data=request.data)
             if serializer.is_valid():
-                serializer.update(qs, serializer.validated_data)
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+                instance = serializer.update(qs, serializer.validated_data)
+                
+                notify = NotificationModel.objects.create(
+                    title="Updated: Product",
+                    body="Product name %s with ID %s updated successfully" % (instance.name, instance.id)
+                )
+                notify.vendor_user.add(request.user.client_vendor)
+                
+                return Response({"Message": serializer.data}, status=status.HTTP_202_ACCEPTED)
+            return Response({"Error": serializer.errors}, status=status.HTTP_202_ACCEPTED)
         except ParentProductModel.DoesNotExist as e:
             return Response({"Error": [str(e)]}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -85,11 +110,17 @@ class ParentProductDetailView(APIView):
         self.permission_classes = [IsAuthenticated, OnlyVendor]
         self.check_permissions(request)
         try:
-            qs = ParentProductModel.objects.get(id=id)
-            if not qs.active:
-                return Response({"Error": ["Product doesnot exists"]}, status=status.HTTP_400_BAD_REQUEST)
-            qs.active = False
-            qs.save()
+            instance = ParentProductModel.objects.get(id=id)
+            
+            notify = NotificationModel.objects.create(
+                title="Updated: Product",
+                body="Product name %s with ID %s updated successfully" % (instance.name, instance.id)
+            )
+            notify.vendor_user.add(request.user.client_vendor)
+            
+            instance.delete()
+                
+                
             return Response({"Message": "Delete a category"}, status=status.HTTP_204_NO_CONTENT)
         except ParentProductModel.DoesNotExist as e:
             return Response({"Error": [str(e)]}, status=status.HTTP_400_BAD_REQUEST)

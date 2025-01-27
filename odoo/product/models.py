@@ -30,7 +30,6 @@ class ProductCategoryModel(TimeIt):
         symmetrical=False
     )
     description = models.TextField(verbose_name=_("Description of the category"), null=True)
-    active = models.BooleanField(default=True, verbose_name=_("Delete the category"))
 
 
 # Product Template Model
@@ -45,7 +44,6 @@ class ParentProductModel(TimeIt):
     description = models.TextField(verbose_name=_("Long description"), null=True, blank=True)
     image_url = models.URLField(default="https://", verbose_name="URL of the project's image", null=True)
     tags = TaggableManager()
-    active = models.BooleanField(default=True, verbose_name=_("Delete a product"))
 
 class AttributesCustom(models.TextChoices):
     CUSTOM = "CUS", _("Custom")

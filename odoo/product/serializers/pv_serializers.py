@@ -22,7 +22,7 @@ class PVCreateSerializers(serializers.ModelSerializer):
 class PVSerializersDetail(serializers.ModelSerializer):
     
     id = serializers.IntegerField(required=False)
-    product_template_id = serializers.PrimaryKeyRelatedField(many=True, queryset=ParentProductModel.objects.all())
+    product_template_id = serializers.PrimaryKeyRelatedField(queryset=ParentProductModel.objects.all())
     attribute_values = serializers.PrimaryKeyRelatedField(many=True, queryset=AttributeValuesModel.objects.all())
     class Meta:
         model = ProductVariantsModel
