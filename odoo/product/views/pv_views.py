@@ -46,7 +46,6 @@ class ProductVariantsView(ListCreateAPIView):
 class ProductVariantDetailView(RetrieveAPIView, UpdateAPIView, DestroyAPIView):
     lookup_field = "id"
     queryset = ProductVariantsModel.objects.all()
-    permission_classes = [IsAuthenticated, OnlyVendor]
     serializer_class = pv_serializers.PVSerializersDetail
     
         
@@ -54,7 +53,15 @@ class ProductVariantDetailView(RetrieveAPIView, UpdateAPIView, DestroyAPIView):
         self.instance =  super().get_object()
         return self.instance
     
+    def get(self, request, *args, **kwargs):
+        self.permission_classes = [IsAuthenticatedOrReadOnly]
+        self.check_permissions(request)
+        return super().get(request, *args, **kwargs)
+    
     def put(self, request, *args, **kwargs):
+        self.permission_classes = [IsAuthenticated, OnlyVendor]
+        self.check_permissions(request)
+        
         # instance = self.get_object()
         response = super().put(request, *args, **kwargs)
         
@@ -73,6 +80,8 @@ class ProductVariantDetailView(RetrieveAPIView, UpdateAPIView, DestroyAPIView):
     
     
     def delete(self, request, *args, **kwargs):
+        self.permission_classes = [IsAuthenticated, OnlyVendor]
+        self.check_permissions(request)
         instance = self.get_object()
         response = super().delete(request, *args, **kwargs)
         

@@ -22,6 +22,13 @@ class BasketModel(models.Model):
     total_price = models.FloatField(default=0., verbose_name=_("Calculated total price of the basket"))
     
     def set_total_price(self):
+        """
+        - Update the total price of the basket item and save them.
+        - Set the total price of basket.
+        
+        `Instace must be saved after calling this method to update the total price of basket`.
+        """
+        
         total = 0.
         for item in self.basket_item.all():
             item.set_total_price()

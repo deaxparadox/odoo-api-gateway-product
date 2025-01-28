@@ -6,6 +6,7 @@ class OrderStatus(models.IntegerChoices):
     DRAFT = 0
     CONFIRMED = 1
     DONE = 2
+    CANCELED = 3
 
 class OrderModel(models.Model):
     order_id = models.CharField(
@@ -63,4 +64,39 @@ class OrderLinesModel(models.Model):
     )
     subtotal = models.FloatField(
         verbose_name=_("Subtotal amount for the line")
+    )
+
+
+class PaymentChoices(models.TextChoices):
+    NUL = "NUL", _("Select the payment method")
+    COD = "COD", _("Cash on delivery")
+    UPI = "UPI", _("Unified payment gateway")
+    DEBIT = "DEB", _("Payment using debit card")
+
+class OrderManager(models.Model):
+    id = models.CharField(
+        max_length=10,
+        primary_key=True,
+        verbose_name=_("ID of the order manager"),
+        unique=True,
+        default=generate_random_string,
+    )
+    user_id = models.ForeignKey(
+        "users.ClientUserModel",
+        verbose_name=_("Order ID"),
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="order_manager"
+    )
+    orders = models.OneToOneField(
+        OrderModel,
+        verbose_name=_("Order ID"),
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="order_manager"
+    )
+    payment_type = models.TextField(
+        default=PaymentChoices.NUL,
+        choices=PaymentChoices,
+        verbose_name=_("Select the payment choices")
     )

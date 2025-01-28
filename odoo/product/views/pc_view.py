@@ -15,12 +15,11 @@ class ProductCategoriesView(APIView):
         """
         Get all product categories
         """
-        product_scope = request.GET.get("active", None)
+        self.permission_classes = [IsAuthenticatedOrReadOnly]
+        self.check_permissions(request)
+        
+        # For all the categories will be displayed.
         product_qs = models.ProductCategoryModel.objects.all()
-        if product_scope == 'true':
-            product_qs = product_qs.filter(active=True)
-        elif product_scope == 'false':
-            product_qs = product_qs.filter(active=False)
         # print(product_qs)
         product_qs_serializer = pc_serializer.ProductCategorySerializer(product_qs, many=True)
         return Response({"Message": product_qs_serializer.data}, status=status.HTTP_200_OK)
@@ -60,6 +59,7 @@ class ProductCategoriesView(APIView):
                 notify_instance.vendor_user.add(product_instance.vendor_id)
                 ret_serial = pc_serializer.PCCreateReturnSerializer(product_instance)
                 return Response({"Message": ret_serial.data}, status=status.HTTP_201_CREATED)
+            return Response({"Error": product_create_new.errors}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"Error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -73,21 +73,15 @@ class ProductView(APIView):
         Get details of a specific category
         """
         self.permission_classes = [IsAuthenticatedOrReadOnly]
-        self.check_permissions()
+        self.check_permissions(request)
         try:
             product_qs = models.ProductCategoryModel.objects.get(id=id)
-            if not product_qs.active:
-                return Response({"Message": [
-                    "Product doesnot exist"
-                ]}, status=status.HTTP_400_BAD_REQUEST)    
             product_qs_serializer = pc_serializer.ProductCategorySerializer(product_qs)
             return Response(product_qs_serializer.data, status=status.HTTP_200_OK)
-        # Not product exist exception
         except models.ProductCategoryModel.DoesNotExist as e:
             return Response({"Message": [
                 str(e)
-            ]}, status=status.HTTP_400_BAD_REQUEST)    
-        # Any other exception
+            ]}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"Message": [
                 str(e)
@@ -95,19 +89,24 @@ class ProductView(APIView):
     
     def put(self, request, id: int):
         """
-        Update a category
+        Update a category.
+        
+        Submit the request containing the whole data.
+        
+        Required:
+        - id: Category id from the url path.
+        - vendor_id: from the authentication request.
+        Optionals
         """
         self.permission_classes = [IsAuthenticated, OnlyVendor]
         self.check_permissions(request)
         
-        update_serializer = pc_serializer.ProductCategoryUpdateSerializer(data=request.data)
+        update_serializer = pc_serializer.ProductCategoryUpdateSerializer(data=request.data, partial=True)
         
         try:
             if update_serializer.is_valid():
                 product_qs = models.ProductCategoryModel.objects.get(id=id)
-                # Check product existence.
-                if not product_qs.active:
-                    return Response({"Message": ["Product doesnot exists"]}, status=status.HTTP_400_BAD_REQUEST)
+                
                 product_instance = update_serializer.update(product_qs, update_serializer.validated_data)
                 
                 notify_instance = NotificationModel.objects.create(
@@ -117,9 +116,9 @@ class ProductView(APIView):
                 # notify the vendor about his new category
                 notify_instance.save()
                 notify_instance.vendor_user.add(product_instance.vendor_id)
-                
+                ret_serializer = pc_serializer.PCCreateReturnSerializer(product_instance)
                 return Response(
-                    update_serializer.data, 
+                    ret_serializer.data, 
                     status=status.HTTP_202_ACCEPTED
                 )
             else:

@@ -9,9 +9,13 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         fields = ['name', 'vendor_id', 'description', 'id', 'child_ids', "parent_id"]
         
 class ProductCategoryUpdateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    child_ids = serializers.PrimaryKeyRelatedField(required=False, many=True, queryset=models.ProductCategoryModel.objects.all())
+    parent_id = serializers.PrimaryKeyRelatedField(required=False, queryset=models.ProductCategoryModel.objects.all())
+    description = serializers.CharField(required=False)
     class Meta:
         model = models.ProductCategoryModel
-        fields = ['name', 'vendor_id', 'description', "parent_id", "child_ids"]
+        fields = ['name', 'description', "parent_id", "child_ids"]
         
             
 
@@ -31,6 +35,7 @@ class PCCreateSerializer(serializers.Serializer):
     child_ids = serializers.ListField(allow_empty=True, child=serializers.IntegerField())
     
     def create(self, validated_data):
+        print(validated_data.keys())
         child_ids = validated_data.pop("child_ids", None)
         parent_id = validated_data.pop("parent_id", None)
         description = validated_data.pop("description", None)

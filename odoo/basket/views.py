@@ -17,6 +17,7 @@ from .models import (
 )
 from product.models import ProductVariantsModel
 from product.serializers.pv_serializers import PVSerializers
+from notifications.models import NotificationModel
 from helpers.message import message_collector
 from helpers.permissions import OnlyUser
 
@@ -32,8 +33,12 @@ class Basket:
         serializer = BasketSerializer(user_basket)
         data = {**serializer.data}
         # Total value of basket
-        basket_items = user_basket.basket_item.all()
-        data['total_price'] = sum(x.total_price() for x in basket_items)
+        basket_items = []
+        for item in user_basket.basket_item.all():
+            item.set_total_price()
+            item.save()
+            basket_items.append(item)
+        data['total_price'] = sum(x.total_price for x in basket_items)
         data['products'] = []
         for item in basket_items:
             pv_serializsers = BasketVariantSerializer(item.product_id)
@@ -45,7 +50,7 @@ class Basket:
             # change variant referene from `id` to `product_variant_id`
             product_variant_id = q.pop("id")
             q.update({"product_variant_id": product_variant_id})
-            # q.pop('price_extra')
+            q.update({"unit_price": item.product_id.get_total_price()})
             # q.pop("barcode")
             # q.pop("sku")
             data["products"].append(q)
@@ -80,6 +85,9 @@ class BasketView(APIView, Basket):
             )
             
     def post(self, request):
+        """
+        Create a new basket.
+        """
         rmc = message_collector()
         try:
             *auth_user, client_user_obj = get_user_obj_from_jwt_request(request)
@@ -88,10 +96,19 @@ class BasketView(APIView, Basket):
                 basket = BasketModel.objects.create(user=client_user_obj)
                 serializer = BasketSerializer(basket)
                 rmc("Basket created successfully")
+                
+                notify = NotificationModel.objects.create(title="Basket created", body="User basket created successfully")
+                notify.client_user.add(client_user_obj)
+                
                 return Response({"Message": [rmc()]}, status=status.HTTP_201_CREATED)
             
             # basket already exists
             rmc("User Basket exists")
+            
+            notify = NotificationModel.objects.create(title="Basket", body="User basket already exists")
+            notify.client_user.add(client_user_obj)
+            
+            
             return Response({"Message": rmc()}, status=status.HTTP_302_FOUND)
         
         except Exception as e:
@@ -105,7 +122,9 @@ class BasketItem(APIView, Basket):
     permission_classes = [IsAuthenticated, OnlyUser]
     
     def post(self, request):
-        # add item to the basket
+        """
+        Add item to the basket.
+        """
         rmc = message_collector()
         
         try:
@@ -123,13 +142,13 @@ class BasketItem(APIView, Basket):
                 product_template_id = pv_serializers.validated_data.get("product_template_id", None)
                 quantity = pv_serializers.validated_data.get("quantity", None)
                 if not product_template_id:
-                    rmc("Product not found in request to add")
+                    rmc("Product ID required")
                     return Response(
                         {"Error": rmc()},
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 if not quantity:
-                    rmc("Invalid quantity")
+                    rmc("Quantity required")
                     return Response(
                         {"Error": rmc()},
                         status=status.HTTP_400_BAD_REQUEST
@@ -142,6 +161,14 @@ class BasketItem(APIView, Basket):
                     quantity=quantity
                 )
                 data = self.build_basket(client_user_obj.basket)
+                
+                
+                notify = NotificationModel.objects.create(
+                    title="Basket Item", 
+                    body=f"Product {product.id} added to the basket"
+                )
+                notify.client_user.add(client_user_obj)
+                
                 return Response(
                     {"Message": data},
                     status=status.HTTP_202_ACCEPTED
@@ -181,6 +208,11 @@ class BasketModifyView(APIView, Basket):
                 basket_item.quantity = quantity_serializer.validated_data['quantity']
                 basket_item.save()
                 
+                notify = NotificationModel.objects.create(
+                    title="Basket Update",
+                    body=f"Product ID {basket_item.product_id.id} quantity updated successfully"
+                )
+                notify.client_user.add(client_user_obj)
                 data = self.build_basket(basket)
                 return Response({"Message": data}, status=status.HTTP_200_OK)
             return Response({"Error": quantity_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -200,10 +232,27 @@ class BasketModifyView(APIView, Basket):
                 }, status=status.HTTP_404_NOT_FOUND)
             queryset = client_user_obj.basket
             
-            basket_item = client_user_obj.basket.basket_item.get(id=basket_id)
+            
+            
+            basket_item: BasketItemModel = client_user_obj.basket.basket_item.get(id=basket_id)
+            
+            
+            notify = NotificationModel.objects.create(
+                title="Basket Update",
+                body=f"Product ID {basket_item.product_id.id} quantity deleted successfully"
+            )
+            notify.client_user.add(client_user_obj)
+            
+            
             basket_item.delete()
             
             rmc("Item deleted successfully from basket.")
+            
+            notify = NotificationModel.objects.create(
+                title="Basket Deleted",
+                body=f"Product ID {basket_item.product_id.id} quantity deleted successfully"
+            )
+            notify.client_user.add(client_user_obj)
             
             return Response({
                 "Message": rmc()
@@ -231,6 +280,14 @@ class BasketClear(APIView):
             basket = client_user_obj.basket
             for item in basket.basket_item.all():
                 item.delete()
+            
+            notify = NotificationModel.objects.create(
+                title="Basket cleared",
+                body=f"All product removed from the basket"
+            )
+            notify.client_user.add(client_user_obj)
+              
+            
             return Response({"Message": "Basket cleared"}, status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             rmc(str(e))

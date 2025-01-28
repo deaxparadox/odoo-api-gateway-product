@@ -36,4 +36,3 @@ class BasketItemAddSerializers(serializers.Serializer):
 
 class BasketQuantitySerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
-    basket_item_id = serializers.IntegerField()

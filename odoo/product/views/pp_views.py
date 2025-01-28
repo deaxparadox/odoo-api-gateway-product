@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework import status
 from product.serializers import pp_serializers
-from product.models import ParentProductModel
+from product.models import ParentProductModel, ProductCategoryModel
 from notifications.models import NotificationModel
 from helpers.permissions import OnlyVendor
 
@@ -21,6 +21,30 @@ class ParentProductView(APIView):
         """
         self.permission_classes = [IsAuthenticatedOrReadOnly]
         self.check_permissions(request)
+        
+        # If vendor request, the return only vendor product
+        # if hasattr(request.user, "client_vendor"):
+        #     # print("Returning only vendor products")
+            
+        #     # get vendors product from all category
+        #     all_products: list[ParentProductModel] = []
+                
+        #     if hasattr(request.user.client_vendor, "product_category"):
+        #         all_category: list[ProductCategoryModel] = request.user.client_vendor.product_category.all()
+        #         # print([x.parent_product.all() for x in all_category])
+        #         for cat in all_category:
+        #             if hasattr(cat, 'parent_product'):
+        #                 for c in cat.parent_product.all():
+        #                     all_products.append(c)
+                
+        #         if len(all_products) == 0:
+        #             return Response({"Error": "Not product found"}, status=status.HTTP_404_NOT_FOUND)
+                
+        #         serializer = pp_serializers.PPSerializers(all_products, many=True)
+        #         return Response({"Message": serializer.data}, status=status.HTTP_200_OK)
+                            
+        #     return Response({"Error": "Not product found"}, status=status.HTTP_404_NOT_FOUND)
+        
         qs = ParentProductModel.objects.all()
         qs_serializer = pp_serializers.PPSerializers(qs, many=True)
         return Response({"Products": qs_serializer.data}, status=status.HTTP_200_OK)
@@ -45,7 +69,14 @@ class ParentProductView(APIView):
             # print(request.data)
             pps = pp_serializers.PPCreateSerializer(data=request.data)
             if pps.is_valid():
+                
+                # check for child_ids, because its required for hierarchial structure
+                category_ids = pps.validated_data.get("category_ids", None)
+                if not category_ids or len(category_ids) == 0:
+                    return Response({"Error": "Category_ids cannot be empty."})
+                
                 instance = pps.save()
+                
                 ret_serializer = pp_serializers.PPSerializers(instance)
                 
                 notify = NotificationModel.objects.create(
@@ -86,7 +117,7 @@ class ParentProductDetailView(APIView):
         self.check_permissions(request)
         try:
             qs = ParentProductModel.objects.get(id=id)
-            serializer = pp_serializers.PPCreateSerializer(data=request.data)
+            serializer = pp_serializers.PPUpdateSerializer(data=request.data, partial=True)
             if serializer.is_valid():
                 instance = serializer.update(qs, serializer.validated_data)
                 
