@@ -3,15 +3,6 @@ from .models import OrderLinesModel, OrderModel, OrderManager
 from rest_framework.validators import UniqueValidator
 
 
-class PaymentValidator:
-    def __init__(self, base):
-        self.base = base
-
-    def __call__(self, value):
-        # if value % self.base != 0:
-        #     message = 'This field must be a multiple of %d.' % self.base
-        #     raise serializers.ValidationError(message)
-        print(value) 
 
 class OrderSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -28,11 +19,31 @@ class OrderSerializer(serializers.ModelSerializer):
             "shipping_address"
         ]
         
+class OrderLineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderLinesModel
+        fields = ["line_id", "product_id", "product_uom_qty", "price_unit", "subtotal"]
+        
+class OrderDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderModel
+        fields = [
+            'order_id', 
+            "name", 
+            "user_id", 
+            "status", 
+            "order_date", 
+            "total_price",
+            "shipping_address",
+        ]
+
+        
 class OrderManagerSerializer(serializers.ModelSerializer):
-    orders = OrderSerializer()
     class Meta:
         model= OrderManager
-        fields = ["id", 'orders', "payment_type"]
+        fields = ["payment_type"]
+        
+
     
 class OMUpdateSerializer(serializers.Serializer):
     payment_type = serializers.CharField()    

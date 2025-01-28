@@ -15,9 +15,11 @@ from .models import (
     PaymentChoices
 )
 from .serializers import (
-    OrderSerializer, 
+    OrderSerializer,
+    OrderDetailSerializer,
     OrderManagerSerializer,
-    OMUpdateSerializer
+    OMUpdateSerializer,
+    OrderLineSerializer
 )
 from helpers.permissions import OnlyUser
 from helpers.generate import generate_random_string
@@ -36,12 +38,17 @@ class OrderView(APIView):
         """
         try:
             client_user = request.user.client_user
-            if hasattr(client_user, 'order_manager'):
-                orders: list[OrderManager] = []
-                for item in client_user.order_manager.all():
-                    orders.append(OrderManagerSerializer(item).data)
-                return Response({"Message": orders}, status=status.HTTP_200_OK)
-            return Response({"Message": "No order"}, status=status.HTTP_404_NOT_FOUND)
+            # if hasattr(client_user, 'order_manager'):
+            #     orders: list[OrderManager] = []
+            #     for item in client_user.order_manager.all():
+            #         orders.append(OrderManagerSerializer(item).data)
+            #     return Response({"Message": orders}, status=status.HTTP_200_OK)
+            # return Response({"Message": "No order"}, status=status.HTTP_404_NOT_FOUND)
+            
+            data = {}
+            orders = client_user.orders.all()
+            serializer = OrderDetailSerializer(orders, many=True)
+            return Response({"Message": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"Error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -77,6 +84,14 @@ class OrderView(APIView):
             
             if len(basket_item) == 0:
                 return Response({"Error": "Empty basket, add product to the basket."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # check for incompleted (pending orders)
+            # if pending order existing the notify the user to 
+            # complete or delete the last order.
+            if len(OrderManager.objects.filter(user_id=client_user.user_id)) > 0:
+                order = OrderModel.objects.get(user_id=client_user.user_id)
+                return Response({"Message": "You have incompleted order id %s, either discard it or complete the order" % order.order_id}, status=status.HTTP_302_FOUND)
+            
             
             # update the price of basket and basket item
             basket.set_total_price()
@@ -119,7 +134,7 @@ class OrderView(APIView):
                 user_id=client_user
             )
             
-            serializer = OrderSerializer(new_order, many=True)
+            serializer = OrderSerializer(new_order)
             return Response({"Message": serializer.data}, status=status.HTTP_201_CREATED)
                
         except Exception as e:
@@ -135,9 +150,23 @@ class OrderDetails(APIView):
         Return the current order in process.
         """
         try:
-            order = OrderModel.objects.get(order_id=order_id)
-            serializer = OrderSerializer(order)
-            return Response({"Message": serializer.data}, status=status.HTTP_200_OK)
+            client_user = request.user.client_user
+            print("calling right function")
+            data = {}
+            orders = client_user.orders.filter(order_id=order_id)
+            if len(orders) == 0:
+                return Response({"Error": "No order found"}, status=status.HTTP_404_NOT_FOUND)
+            if len(orders) > 1:
+                return Response({"Error": "Multiple order returned"}, status=status.HTTP_409_CONFLICT)
+            order = orders[0]
+            serializer = OrderDetailSerializer(order)
+            serializer_order_line = OrderLineSerializer(order.order_line.all(), many=True)
+            serializer_manager = OrderManagerSerializer(order.order_manager)
+            data.update({"order": {**serializer.data}})
+            data.update({"order_line": serializer_order_line.data})
+            data.update({"payment": serializer_manager.data})
+            
+            return Response({"Message": data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"Error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -150,10 +179,32 @@ class OrderDetails(APIView):
         try:
             serializer = OMUpdateSerializer(data=request.data)
             if serializer.is_valid():
-                order_manager = OrderManager.objects.get(id=order_id)
+                order = OrderModel.objects.get(order_id=order_id)
+                order_manager = order.order_manager
                 order_manager.payment_type = serializer.validated_data.get("payment_type")
                 order_manager.save()
                 return Response({"Message": serializer.data}, status=status.HTTP_202_ACCEPTED)
             return Response({"Error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)    
+        except Exception as e:
+            return Response({"Error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+    def delete(self, request, order_id):
+        """
+        Delete the order.
+        
+        - Delete all order line objects.
+        - Delete order object.
+        - Delete related manager object.
+        """
+        try:
+            order = OrderModel.objects.filter(user_id=request.user.client_user.user_id).filter(order_id=order_id)
+            order_lines = OrderLinesModel.objects.filter(order_id=order_id)
+            order_manager = OrderManager.objects.get(orders=order_id)
+            order_manager.delete()
+            for line in order_lines: line.delete()
+            for o in order: o.delete()
+            return Response({"Message": "Successfully deleted the order %s" % order_id}, status=status.HTTP_204_NO_CONTENT)
+            # return Response({"Error": "Not order found with the following ID."})
+                
         except Exception as e:
             return Response({"Error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
